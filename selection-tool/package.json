@@ -1,0 +1,45 @@
+{
+  "name": "@yomguithereal/sigma-experiments-selection-tool",
+  "version": "1.0.0",
+  "description": "A rectangle selection tool for sigma v2.",
+  "main": "index.js",
+  "files": [
+    "index.js"
+  ],
+  "scripts": {
+    "arctic": "kotatsu serve arctic.js --index index.html",
+    "dev": "kotatsu serve example.js --index index.html",
+    "prettier": "prettier --write '**/*.js'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yomguithereal/sigma-experiments.git"
+  },
+  "keywords": [
+    "graph",
+    "graphology",
+    "sigma",
+    "selection"
+  ],
+  "contributors": [
+    {
+      "name": "Guillaume Plique",
+      "url": "http://github.com/Yomguithereal"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Yomguithereal/sigma-experiments/issues"
+  },
+  "homepage": "https://github.com/Yomguithereal/sigma-experiments/selection-tool#readme",
+  "devDependencies": {
+    "@yomguithereal/prettier-config": "^1.1.0",
+    "graphology": "^0.17.1",
+    "iwanthue": "^1.4.0",
+    "kotatsu": "^0.19.1",
+    "pandemonium": "^1.5.0",
+    "prettier": "^2.0.5",
+    "sigma": "2.0.0-alpha34"
+  },
+  "prettier": "@yomguithereal/prettier-config"
+}
