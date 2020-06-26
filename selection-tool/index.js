@@ -62,7 +62,7 @@ function enhanceWithSelectionTool(renderer, settings) {
 
   container.appendChild(selectionDiv);
 
-  function getRectangle(event) {
+  function getRectangle() {
     var x1 = state.xStart;
     var y1 = state.yStart;
 
@@ -89,8 +89,8 @@ function enhanceWithSelectionTool(renderer, settings) {
     };
   }
 
-  function updateSelectionDiv(event) {
-    var rectangle = getRectangle(event);
+  function updateSelectionDiv() {
+    var rectangle = getRectangle();
 
     selectionDiv.style.left = rectangle.x3 + 'px';
     selectionDiv.style.top = rectangle.y3 + 'px';
@@ -114,14 +114,14 @@ function enhanceWithSelectionTool(renderer, settings) {
     updateSelectionDiv(event);
   };
 
-  var mouseupListener = function (event) {
+  var mouseupListener = function () {
     if (!state.isSelecting) return;
 
     camera.enable();
     state.isSelecting = false;
     selectionDiv.style.display = 'none';
 
-    var rectangle = getRectangle(event);
+    var rectangle = getRectangle();
 
     var p1 = {x: rectangle.x3 - maxNodeSize, y: rectangle.y3 - maxNodeSize};
     var p2 = {x: p1.x + rectangle.width + maxNodeSize, y: p1.y};
