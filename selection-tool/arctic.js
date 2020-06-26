@@ -44,4 +44,9 @@ renderer.on('selectNodes', ({nodes}) => {
 
 renderer.on('clickStage', cleanup);
 
+renderer.on('rightClickNode', ({node, event}) => {
+  event.preventDefault();
+  alert(node);
+});
+
 window.renderer = renderer;
