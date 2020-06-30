@@ -33,8 +33,9 @@ const cleanupSelectionTool = enhanceWithSelectionTool(renderer, {
 });
 
 // The `cleanupSelectionTool` function returned by the plugin is only useful
-// if your webapp often kill renderers etc. so that you clean resources
-// correctly to avoid memory leaks
+// if you need to get rid of the plugin's features for any reason.
+// Note that this cleanup function will automatically be called when renderer
+// is killed using the #.kill method to prevent memory leaks.
 
 // Now you can listen to the `selectNodes` event
 renderer.on('selectNodes', ({nodes}) => {
