@@ -105,8 +105,8 @@ function enhanceWithSelectionTool(renderer, settings) {
 
     camera.disable();
     state.isSelecting = true;
-    state.xStart = event.clientX - container.offsetLeft;
-    state.yStart = event.clientY - container.offsetTop;
+    state.xStart = event.clientX - container.offsetLeft + window.scrollX;
+    state.yStart = event.clientY - container.offsetTop + window.scrollY;
     state.xCurrent = state.xStart;
     state.yCurrent = state.yStart;
 
@@ -177,8 +177,8 @@ function enhanceWithSelectionTool(renderer, settings) {
   var mousemoveListener = function (event) {
     if (!state.isSelecting) return;
 
-    state.xCurrent = event.clientX - container.offsetLeft;
-    state.yCurrent = event.clientY - container.offsetTop;
+    state.xCurrent = event.clientX - container.offsetLeft + window.scrollX;
+    state.yCurrent = event.clientY - container.offsetTop + window.scrollY;
 
     updateSelectionDiv(event);
   };
