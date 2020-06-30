@@ -39,7 +39,7 @@
     "kotatsu": "^0.19.1",
     "pandemonium": "^1.5.0",
     "prettier": "^2.0.5",
-    "sigma": "2.0.0-alpha34"
+    "sigma": "2.0.0-alpha35"
   },
   "prettier": "@yomguithereal/prettier-config"
 }
