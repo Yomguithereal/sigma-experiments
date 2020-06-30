@@ -1,6 +1,6 @@
 {
   "name": "@yomguithereal/sigma-experiments-selection-tool",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A rectangle selection tool for sigma v2.",
   "main": "index.js",
   "files": [
