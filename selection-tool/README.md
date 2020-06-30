@@ -10,14 +10,14 @@ A straightforward rectangle selection tool plugin for sigma.js v2.
 npm install @yomguithereal/sigma-experiments-selection-tool
 ```
 
-Note that this plugin has been written to work with sigma `2.0.0-alpha35`.
+Note that this plugin has been written to work with sigma `2.0.0-alpha36`.
 
 You should probably freeze strictly this dependency in your package.json by dropping `^` or `~` to avoid automatic upgrades that could break your setup:
 
 ```json
 {
   "dependencies": {
-    "sigma": "2.0.0-alpha35"
+    "sigma": "2.0.0-alpha36"
   }
 }
 ```
