@@ -55,7 +55,7 @@ function enhanceWithSelectionTool(renderer, settings) {
   var selectionDiv = document.createElement('div');
   selectionDiv.style.display = 'none';
   selectionDiv.style.zIndex = '' + zIndex;
-  selectionDiv.style.position = 'absolute';
+  selectionDiv.style.position = 'relative';
   selectionDiv.style.border = borderStyle;
 
   var container = renderer.container;
@@ -105,8 +105,8 @@ function enhanceWithSelectionTool(renderer, settings) {
 
     camera.disable();
     state.isSelecting = true;
-    state.xStart = event.clientX;
-    state.yStart = event.clientY;
+    state.xStart = event.clientX - container.offsetLeft;
+    state.yStart = event.clientY - container.offsetTop;
     state.xCurrent = state.xStart;
     state.yCurrent = state.yStart;
 
@@ -177,8 +177,8 @@ function enhanceWithSelectionTool(renderer, settings) {
   var mousemoveListener = function (event) {
     if (!state.isSelecting) return;
 
-    state.xCurrent = event.clientX;
-    state.yCurrent = event.clientY;
+    state.xCurrent = event.clientX - container.offsetLeft;
+    state.yCurrent = event.clientY - container.offsetTop;
 
     updateSelectionDiv(event);
   };
@@ -192,7 +192,7 @@ function enhanceWithSelectionTool(renderer, settings) {
   // Cleanup
   var cleanup = function () {
     selectionDiv.removeEventListener('mousemove', mousemoveListener);
-    renderer.container.removeChild(selectionDiv);
+    container.removeChild(selectionDiv);
     renderer.removeListener('downStage', downStageListener);
   };
 
