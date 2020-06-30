@@ -98,6 +98,27 @@ function enhanceWithSelectionTool(renderer, settings) {
     selectionDiv.style.height = rectangle.height + 'px';
   }
 
+  function offset(el) {
+    var rect = el.getBoundingClientRect();
+
+    return {
+      top: rect.top + document.documentElement.scrollTop,
+      left: rect.left + document.documentElement.scrollLeft
+    };
+  }
+
+  function getEventX(event) {
+    if (event.original) event = event.original;
+
+    return event.pageX - offset(container).left;
+  }
+
+  function getEventY(event) {
+    if (event.original) event = event.original;
+
+    return event.pageY - offset(container).top;
+  }
+
   // Events
   var downStageListener = function ({event}) {
     // We only trigger if the shift key was pressed
@@ -105,8 +126,8 @@ function enhanceWithSelectionTool(renderer, settings) {
 
     camera.disable();
     state.isSelecting = true;
-    state.xStart = event.clientX - container.offsetLeft + window.scrollX;
-    state.yStart = event.clientY - container.offsetTop + window.scrollY;
+    state.xStart = getEventX(event);
+    state.yStart = getEventY(event);
     state.xCurrent = state.xStart;
     state.yCurrent = state.yStart;
 
@@ -177,8 +198,8 @@ function enhanceWithSelectionTool(renderer, settings) {
   var mousemoveListener = function (event) {
     if (!state.isSelecting) return;
 
-    state.xCurrent = event.clientX - container.offsetLeft + window.scrollX;
-    state.yCurrent = event.clientY - container.offsetTop + window.scrollY;
+    state.xCurrent = getEventX(event);
+    state.yCurrent = getEventY(event);
 
     updateSelectionDiv(event);
   };
