@@ -1,5 +1,5 @@
 import {UndirectedGraph} from 'graphology';
-import WebGLRenderer from 'sigma/renderers/webgl';
+import Sigma from 'sigma';
 import palettes from 'iwanthue/precomputed';
 import random from 'pandemonium/random';
 
@@ -46,7 +46,7 @@ NODES.forEach(([key1], i) => {
   });
 });
 
-const renderer = new WebGLRenderer(GRAPH, CONTAINER);
+const renderer = new Sigma(GRAPH, CONTAINER);
 
 enhanceWithSelectionTool(renderer, {
   borderStyle: '1px dashed red',

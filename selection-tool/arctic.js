@@ -1,5 +1,5 @@
 import {MultiUndirectedGraph} from 'graphology';
-import WebGLRenderer from 'sigma/renderers/webgl';
+import Sigma from 'sigma';
 
 import enhanceWithSelectionTool from './';
 
@@ -15,7 +15,7 @@ GRAPH.forEachNode((node, attr) => {
   originalColors[node] = attr.color;
 });
 
-const renderer = new WebGLRenderer(GRAPH, CONTAINER);
+const renderer = new Sigma(GRAPH, CONTAINER);
 
 enhanceWithSelectionTool(renderer, {
   borderStyle: '1px dashed red',
