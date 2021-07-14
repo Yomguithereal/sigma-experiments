@@ -148,9 +148,9 @@ function enhanceWithSelectionTool(renderer, settings) {
     var p2 = {x: p1.x + rectangle.width + maxNodeSize, y: p1.y};
     var h = {x: p1.x, y: p1.y + rectangle.height + maxNodeSize};
 
-    p1 = camera.viewportToGraph(renderer, p1.x, p1.y);
-    p2 = camera.viewportToGraph(renderer, p2.x, p2.y);
-    h = camera.viewportToGraph(renderer, h.x, h.y);
+    p1 = camera.viewportToFramedGraph(renderer, {x: p1.x, y: p1.y});
+    p2 = camera.viewportToFramedGraph(renderer, {x: p2.x, y: p2.y});
+    h = camera.viewportToFramedGraph(renderer, {x: h.x, y: h.y});
 
     h = p2.y - h.y;
 
@@ -174,7 +174,7 @@ function enhanceWithSelectionTool(renderer, settings) {
     nodes = nodes.filter(function (node) {
       var attr = renderer.nodeDataCache[node];
 
-      var nodePosition = camera.graphToViewport(renderer, attr.x, attr.y);
+      var nodePosition = camera.framedGraphToViewport(renderer, {x: attr.x, y: attr.y});
 
       var size = attr.size / sizeRatio;
 
