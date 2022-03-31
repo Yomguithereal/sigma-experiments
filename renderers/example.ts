@@ -60,7 +60,7 @@ graph.updateEachNodeAttributes((node, attr) => {
     size,
     haloSize: size * 7,
     color: "red",
-    haloColor: "cyan",
+    haloColor: "blue",
     insideColor: "yellow",
     dotColor: "black",
     haloIntensity: Math.random(),

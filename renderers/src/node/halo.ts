@@ -13,6 +13,7 @@ const ANGLE_3 = (4 * Math.PI) / 3;
 // NOTE: color could become a uniform in performance scenarios
 // TODO: sometimes you might want to avoid camera correction
 // TODO: how to access settings on render for uniforms?
+// TODO: would we need to render under edges?
 const vertexShaderSource = `
 attribute vec2 a_position;
 attribute float a_size;
