@@ -2,6 +2,7 @@ import { NodeDisplayData } from "sigma/types";
 import { floatColor } from "sigma/utils";
 import { AbstractProgram, RenderParams } from "sigma/rendering/webgl/programs/common/program";
 
+// TODO: template to get different ratios of circles, i.e. simple border
 const vertexShaderSource = `
 attribute vec2 a_position;
 attribute float a_size;

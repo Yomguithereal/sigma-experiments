@@ -15,7 +15,7 @@ randomLayout.assign(graph);
 forceAtlas2.assign(graph, { iterations: 100, settings: forceAtlas2.inferSettings(graph) });
 
 graph.updateEachNodeAttributes((node, attr) => {
-  return { ...attr, size: 30, insideColor: "yellow", dotColor: "black" };
+  return { ...attr, size: 35, insideColor: "yellow", dotColor: "black", intensity: Math.random() };
 });
 
 const container = document.getElementById("container") as HTMLDivElement;
