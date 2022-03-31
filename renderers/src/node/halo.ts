@@ -156,7 +156,11 @@ export default class NodeHaloProgram extends AbstractProgram {
     );
   }
 
-  process(data: NodeDisplayData & { intensity: number }, hidden: boolean, offset: number): void {
+  process(
+    data: NodeDisplayData & { haloIntensity: number; haloSize: number; haloColor: string },
+    hidden: boolean,
+    offset: number,
+  ): void {
     const array = this.array;
     let i = offset * POINTS * ATTRIBUTES;
 
@@ -173,26 +177,27 @@ export default class NodeHaloProgram extends AbstractProgram {
       return;
     }
 
-    const color = floatColor(data.color);
-    const intensity = typeof data.intensity === "number" ? data.intensity : 1.0;
+    const color = floatColor(data.haloColor || data.color);
+    const intensity = typeof data.haloIntensity === "number" ? data.haloIntensity : 1.0;
+    const size = Math.max(data.haloSize || 0, data.size);
 
     array[i++] = data.x;
     array[i++] = data.y;
-    array[i++] = data.size;
+    array[i++] = size;
     array[i++] = color;
     array[i++] = ANGLE_1;
     array[i++] = intensity;
 
     array[i++] = data.x;
     array[i++] = data.y;
-    array[i++] = data.size;
+    array[i++] = size;
     array[i++] = color;
     array[i++] = ANGLE_2;
     array[i++] = intensity;
 
     array[i++] = data.x;
     array[i++] = data.y;
-    array[i++] = data.size;
+    array[i++] = size;
     array[i++] = color;
     array[i++] = ANGLE_3;
     array[i] = intensity;
