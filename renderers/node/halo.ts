@@ -12,7 +12,6 @@ const ANGLE_3 = (4 * Math.PI) / 3;
 
 // NOTE: color could become a uniform in performance scenarios
 // TODO: sometimes you might want to avoid camera correction
-// TODO: drop useless AA items
 const vertexShaderSource = `
 attribute vec2 a_position;
 attribute float a_size;
@@ -27,7 +26,6 @@ uniform float u_correctionRatio;
 varying vec4 v_color;
 varying vec2 v_diffVector;
 varying float v_radius;
-varying float v_border;
 varying float v_intensity;
 
 const float bias = 255.0 / 254.0;
@@ -43,7 +41,6 @@ void main() {
     1
   );
 
-  v_border = u_sqrtZoomRatio * u_sqrtZoomRatio / a_size / 50.0;
   v_diffVector = diffVector;
   v_radius = size / 2.0 / marginRatio;
 
@@ -60,7 +57,6 @@ precision mediump float;
 varying vec4 v_color;
 varying vec2 v_diffVector;
 varying float v_radius;
-varying float v_border;
 varying float v_intensity;
 
 const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
