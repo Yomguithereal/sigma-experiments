@@ -7,8 +7,15 @@ import { floatColor } from "sigma/utils";
 import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor, AbstractNodeProgram } from "sigma/rendering/webgl/programs/common/node";
 
-export default function createNodeUniformBorderProgram(borderRatio: number = 0.1): NodeProgramConstructor {
+import { colorToFloatArray } from "../utils";
+
+export default function createNodeUniformBorderProgram(
+  borderColor: string = "white",
+  borderRatio: number = 0.1,
+): NodeProgramConstructor {
   let templateBorderRatio = "" + (0.5 - borderRatio / 2);
+
+  const borderColorAsFloatArray = colorToFloatArray(borderColor);
 
   const vertexShaderSource = `
     attribute vec2 a_position;
@@ -18,8 +25,10 @@ export default function createNodeUniformBorderProgram(borderRatio: number = 0.1
     uniform float u_ratio;
     uniform float u_scale;
     uniform mat3 u_matrix;
+    uniform vec4 u_borderColor;
 
     varying vec4 v_color;
+    varying vec4 v_borderColor;
     varying float v_border;
 
     const float bias = 255.0 / 254.0;
@@ -41,6 +50,8 @@ export default function createNodeUniformBorderProgram(borderRatio: number = 0.1
       // Extract the color:
       v_color = a_color;
       v_color.a *= bias;
+
+      v_borderColor = u_borderColor;
     }
   `;
 
@@ -48,6 +59,7 @@ export default function createNodeUniformBorderProgram(borderRatio: number = 0.1
     precision mediump float;
 
     varying vec4 v_color;
+    varying vec4 v_borderColor;
     varying float v_border;
 
     const float radius = 0.5;
@@ -55,17 +67,16 @@ export default function createNodeUniformBorderProgram(borderRatio: number = 0.1
     const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
 
     void main(void) {
-      vec4 border_color = vec4(0.0, 0.0, 1.0, 1.0);
       float distToCenter = length(gl_PointCoord - vec2(0.5, 0.5));
 
       if (distToCenter < halfRadius - v_border)
         gl_FragColor = v_color;
       else if (distToCenter < halfRadius)
-        gl_FragColor = mix(border_color, v_color, (halfRadius - distToCenter) / v_border);
+        gl_FragColor = mix(v_borderColor, v_color, (halfRadius - distToCenter) / v_border);
       else if (distToCenter < radius - v_border)
-        gl_FragColor = border_color;
+        gl_FragColor = v_borderColor;
       else if (distToCenter < radius)
-        gl_FragColor = mix(transparent, border_color, (radius - distToCenter) / v_border);
+        gl_FragColor = mix(transparent, v_borderColor, (radius - distToCenter) / v_border);
       else
         gl_FragColor = transparent;
     }
@@ -75,8 +86,15 @@ export default function createNodeUniformBorderProgram(borderRatio: number = 0.1
   const ATTRIBUTES = 4;
 
   return class NodeUniformBorderProgram extends AbstractNodeProgram {
+    borderColorLocation: WebGLUniformLocation;
+
     constructor(gl: WebGLRenderingContext) {
       super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
+
+      const borderColorLocation = gl.getUniformLocation(this.program, "u_borderColor");
+      if (borderColorLocation === null) throw new Error("NodeProgram: error while getting borderColorLocation");
+      this.borderColorLocation = borderColorLocation;
+
       this.bind();
     }
 
@@ -109,6 +127,7 @@ export default function createNodeUniformBorderProgram(borderRatio: number = 0.1
       gl.uniform1f(this.ratioLocation, 1 / Math.sqrt(params.ratio));
       gl.uniform1f(this.scaleLocation, params.scalingRatio);
       gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
+      gl.uniform4fv(this.borderColorLocation, borderColorAsFloatArray);
 
       gl.drawArrays(gl.POINTS, 0, this.array.length / ATTRIBUTES);
     }

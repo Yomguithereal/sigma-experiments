@@ -72,7 +72,7 @@ const container = document.getElementById("container") as HTMLDivElement;
 
 const renderer = new Sigma(graph, container, {
   nodeProgramClasses: {
-    uniformBorder: createNodeUniformBorderProgram(0.1),
+    uniformBorder: createNodeUniformBorderProgram("rgba(0, 0, 0, 0.8)", 0.5),
     threeCircles: createNodeThreeCirclesProgram(0.3, 0.95),
     halo: NodeHaloProgram,
     heatmap: createNodeCompoundProgram([NodeHaloProgram, NodeCircleProgram]),
