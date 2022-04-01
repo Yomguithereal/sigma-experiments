@@ -1,18 +1,20 @@
 import { UndirectedGraph } from "graphology";
-import Sigma from "sigma";
-import { NodeDisplayData } from "sigma/types";
-import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
-import { NodeProgramConstructor, INodeProgram } from "sigma/rendering/webgl/programs/common/node";
 import clusters from "graphology-generators/random/clusters";
 import { cropToLargestConnectedComponent } from "graphology-components";
 import randomLayout from "graphology-layout/random";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 
+import Sigma from "sigma";
+import { NodeDisplayData } from "sigma/types";
+import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
+import { NodeProgramConstructor, INodeProgram } from "sigma/rendering/webgl/programs/common/node";
+import NodeCircleProgram from "sigma/rendering/webgl/programs/node.fast";
+
 import createNodeThreeCirclesProgram from "../src/node/three-circles";
 import createNodeUniformBorderProgram from "../src/node/uniform-border";
 import createNodeBorderProgram from "../src/node/border";
-import NodeCircleProgram from "sigma/rendering/webgl/programs/node.fast";
 import createNodeHaloProgram from "../src/node/halo";
+import createNodeUniformHaloProgram from "../src/node/uniform-halo";
 
 function createNodeCompoundProgram(programClasses: Array<NodeProgramConstructor>): NodeProgramConstructor {
   return class NodeCompoundProgram implements INodeProgram {
@@ -62,7 +64,7 @@ graph.updateEachNodeAttributes((node, attr) => {
     size,
     haloSize: size * 7,
     color: "red",
-    haloColor: "blue",
+    haloColor: Math.random() > 0.5 ? "blue" : "green",
     insideColor: "yellow",
     dotColor: "black",
     haloIntensity: Math.random(),
@@ -72,13 +74,20 @@ graph.updateEachNodeAttributes((node, attr) => {
 
 const container = document.getElementById("container") as HTMLDivElement;
 
-const renderer = new Sigma(graph, container, {
+declare global {
+  interface Window {
+    renderer: Sigma;
+  }
+}
+
+window.renderer = new Sigma(graph, container, {
   nodeProgramClasses: {
     border: createNodeBorderProgram(0.3),
     uniformBorder: createNodeUniformBorderProgram("rgba(0, 0, 0, 0.8)", 0.5),
     threeCircles: createNodeThreeCirclesProgram(0.3, 0.95),
     halo: createNodeHaloProgram(),
     heatmap: createNodeCompoundProgram([createNodeHaloProgram(), NodeCircleProgram]),
+    uniformHalo: createNodeUniformHaloProgram({ color: "blue" }),
   },
-  defaultNodeType: "halo",
+  defaultNodeType: "uniformHalo",
 });

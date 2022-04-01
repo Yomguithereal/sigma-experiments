@@ -1,6 +1,6 @@
 // Original author: @jacomyal
 // A node renderer using one point to render a circle with a variable size
-// border.
+// border with uniform color.
 
 import { NodeDisplayData } from "sigma/types";
 import { floatColor } from "sigma/utils";

@@ -1,38 +1,41 @@
 // A node renderer using one triangle to render a blurry halo useful to render
-// a basic heatmap with variable color.
+// a basic heatmap with uniform color.
 
 import { NodeDisplayData } from "sigma/types";
-import { floatColor } from "sigma/utils";
 import { AbstractProgram, RenderParams } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor } from "sigma/rendering/webgl/programs/common/node";
 
+import { colorToFloatArray } from "../utils";
+
 const POINTS = 3;
-const ATTRIBUTES = 6;
+const ATTRIBUTES = 5;
 
 const ANGLE_1 = 0;
 const ANGLE_2 = (2 * Math.PI) / 3;
 const ANGLE_3 = (4 * Math.PI) / 3;
 
 export interface HaloProgramOptions {
+  color?: string;
   ignoreZoom?: boolean;
 }
 
 // NOTE: color could become a uniform in performance scenarios
-export default function createNodeHaloProgram(options?: HaloProgramOptions): NodeProgramConstructor {
+export default function createNodeUniformHaloProgram(options?: HaloProgramOptions): NodeProgramConstructor {
   options = options || {};
 
   const ignoreZoom = options.ignoreZoom === true;
+  const haloColorAsFloatArray = colorToFloatArray(options.color || "#ccc");
 
   const vertexShaderSource = `
     attribute vec2 a_position;
     attribute float a_size;
     attribute float a_angle;
-    attribute vec4 a_color;
     attribute float a_intensity;
 
     uniform mat3 u_matrix;
     uniform float u_sqrtZoomRatio;
     uniform float u_correctionRatio;
+    uniform vec4 u_haloColor;
 
     varying vec4 v_color;
     varying vec2 v_diffVector;
@@ -55,9 +58,7 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
       v_diffVector = diffVector;
       v_radius = size / 2.0 / marginRatio;
 
-      v_color = a_color;
-      v_color.a *= bias;
-
+      v_color = u_haloColor;
       v_intensity = a_intensity;
     }
   `;
@@ -85,16 +86,16 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
     }
   `;
 
-  return class NodeHaloProgram extends AbstractProgram {
+  return class NodeUniformHaloProgram extends AbstractProgram {
     positionLocation: GLint;
     sizeLocation: GLint;
-    colorLocation: GLint;
     angleLocation: GLint;
     intensityLocation: GLint;
 
     matrixLocation: WebGLUniformLocation;
     sqrtZoomRatioLocation: WebGLUniformLocation;
     correctionRatioLocation: WebGLUniformLocation;
+    haloColorLocation: WebGLUniformLocation;
 
     constructor(gl: WebGLRenderingContext) {
       super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
@@ -102,7 +103,6 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
       // Locations
       this.positionLocation = gl.getAttribLocation(this.program, "a_position");
       this.sizeLocation = gl.getAttribLocation(this.program, "a_size");
-      this.colorLocation = gl.getAttribLocation(this.program, "a_color");
       this.angleLocation = gl.getAttribLocation(this.program, "a_angle");
       this.intensityLocation = gl.getAttribLocation(this.program, "a_intensity");
 
@@ -119,6 +119,10 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
       if (correctionRatioLocation === null) throw new Error("NodeProgram: error while getting correctionRatioLocation");
       this.correctionRatioLocation = correctionRatioLocation;
 
+      const haloColorLocation = gl.getUniformLocation(this.program, "u_haloColor");
+      if (haloColorLocation === null) throw new Error("NodeProgram: error while getting haloColorLocation");
+      this.haloColorLocation = haloColorLocation;
+
       this.bind();
     }
 
@@ -127,7 +131,6 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
 
       gl.enableVertexAttribArray(this.positionLocation);
       gl.enableVertexAttribArray(this.sizeLocation);
-      gl.enableVertexAttribArray(this.colorLocation);
       gl.enableVertexAttribArray(this.angleLocation);
       gl.enableVertexAttribArray(this.intensityLocation);
 
@@ -148,20 +151,12 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
         8,
       );
       gl.vertexAttribPointer(
-        this.colorLocation,
-        4,
-        gl.UNSIGNED_BYTE,
-        true,
-        this.attributes * Float32Array.BYTES_PER_ELEMENT,
-        12,
-      );
-      gl.vertexAttribPointer(
         this.angleLocation,
         1,
         gl.FLOAT,
         false,
         this.attributes * Float32Array.BYTES_PER_ELEMENT,
-        16,
+        12,
       );
       gl.vertexAttribPointer(
         this.intensityLocation,
@@ -169,7 +164,7 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
         gl.FLOAT,
         false,
         this.attributes * Float32Array.BYTES_PER_ELEMENT,
-        20,
+        16,
       );
     }
 
@@ -186,28 +181,24 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
         return;
       }
 
-      const color = floatColor(data.haloColor || data.color);
       const intensity = typeof data.haloIntensity === "number" ? data.haloIntensity : 1.0;
       const size = Math.max(data.haloSize || 0, data.size);
 
       array[i++] = data.x;
       array[i++] = data.y;
       array[i++] = size;
-      array[i++] = color;
       array[i++] = ANGLE_1;
       array[i++] = intensity;
 
       array[i++] = data.x;
       array[i++] = data.y;
       array[i++] = size;
-      array[i++] = color;
       array[i++] = ANGLE_2;
       array[i++] = intensity;
 
       array[i++] = data.x;
       array[i++] = data.y;
       array[i++] = size;
-      array[i++] = color;
       array[i++] = ANGLE_3;
       array[i] = intensity;
     }
@@ -223,6 +214,7 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
       gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
       gl.uniform1f(this.sqrtZoomRatioLocation, Math.sqrt(params.ratio));
       gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
+      gl.uniform4fv(this.haloColorLocation, haloColorAsFloatArray);
 
       gl.drawArrays(gl.TRIANGLES, 0, this.array.length / ATTRIBUTES);
     }
