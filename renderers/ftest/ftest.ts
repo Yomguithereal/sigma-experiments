@@ -8,7 +8,7 @@ import { cropToLargestConnectedComponent } from "graphology-components";
 import randomLayout from "graphology-layout/random";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 
-import NodeThreeCirclesProgram from "../src/node/three-circles";
+import createThreeCirclesNodeProgram from "../src/node/three-circles";
 import NodeCircleProgram from "sigma/rendering/webgl/programs/node.fast";
 import NodeHaloProgram from "../src/node/halo";
 
@@ -71,9 +71,9 @@ const container = document.getElementById("container") as HTMLDivElement;
 
 const renderer = new Sigma(graph, container, {
   nodeProgramClasses: {
-    threeCircles: NodeThreeCirclesProgram,
+    threeCircles: createThreeCirclesNodeProgram(),
     halo: NodeHaloProgram,
     heatmap: createNodeCompoundProgram([NodeHaloProgram, NodeCircleProgram]),
   },
-  defaultNodeType: "heatmap",
+  defaultNodeType: "threeCircles",
 });
