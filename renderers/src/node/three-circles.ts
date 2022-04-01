@@ -7,7 +7,7 @@ import { floatColor } from "sigma/utils";
 import { RenderParams, AbstractProgram } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor } from "sigma/rendering/webgl/programs/common/node";
 
-export default function createThreeCirclesNodeProgram(
+export default function createNodeThreeCirclesProgram(
   dotSizeRatio: number = 0.3,
   innerSizeRatio: number = 0.7,
 ): NodeProgramConstructor {
