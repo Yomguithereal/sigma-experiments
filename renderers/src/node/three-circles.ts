@@ -214,15 +214,7 @@ export default class NodeThreeCircles extends AbstractProgram {
     const array = this.array;
 
     if (hidden) {
-      array[i++] = 0;
-      array[i++] = 0;
-      array[i++] = 0;
-      array[i++] = 0;
-      array[i++] = 0;
-      // custom
-      array[i++] = 0;
-      array[i++] = 0;
-
+      for (let l = i + POINTS * ATTRIBUTES; i < l; i++) array[i] = 0;
       return;
     }
 

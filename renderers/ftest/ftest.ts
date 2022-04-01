@@ -8,9 +8,9 @@ import { cropToLargestConnectedComponent } from "graphology-components";
 import randomLayout from "graphology-layout/random";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 
-import NodeThreeCirclesProgram from "./src/node/three-circles";
+import NodeThreeCirclesProgram from "../src/node/three-circles";
 import NodeCircleProgram from "sigma/rendering/webgl/programs/node.fast";
-import NodeHaloProgram from "./src/node/halo";
+import NodeHaloProgram from "../src/node/halo";
 
 function createNodeCompoundProgram(programClasses: Array<NodeProgramConstructor>): NodeProgramConstructor {
   return class NodeCompoundProgram implements INodeProgram {

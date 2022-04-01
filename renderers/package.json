@@ -3,11 +3,15 @@
   "version": "0.0.1",
   "description": "Various alternative renderers for sigma.js v2.",
   "main": "index.js",
+  "types": "index.d.ts",
   "files": [
-    "index.js"
+    "node",
+    "index.js",
+    "*.d.ts"
   ],
   "scripts": {
-    "dev": "kotatsu serve --ts example.ts --index index.html --open",
+    "clean": "rm -rf ./node index.js index.d.ts",
+    "dev": "kotatsu serve --ts ftest/ftest.ts --index ftest/index.html --open",
     "prettier": "prettier --write '**/*.ts'"
   },
   "repository": {

@@ -14,6 +14,7 @@ const ANGLE_3 = (4 * Math.PI) / 3;
 // TODO: sometimes you might want to avoid camera correction
 // TODO: how to access settings on render for uniforms?
 // TODO: would we need to render under edges?
+// TODO: how to deal with hover?
 const vertexShaderSource = `
 attribute vec2 a_position;
 attribute float a_size;
@@ -165,16 +166,8 @@ export default class NodeHaloProgram extends AbstractProgram {
     const array = this.array;
     let i = offset * POINTS * ATTRIBUTES;
 
-    // TODO: this should be done three times, check also with three-circles and
-    // fix issue in node program in sigma itself
-    // TODO: handle hover
     if (hidden) {
-      array[i++] = 0;
-      array[i++] = 0;
-      array[i++] = 0;
-      array[i++] = 0;
-      array[i++] = 0;
-      array[i++] = 0;
+      for (let l = i + POINTS * ATTRIBUTES; i < l; i++) array[i] = 0;
       return;
     }
 
