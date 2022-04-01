@@ -13,9 +13,16 @@ const ANGLE_1 = 0;
 const ANGLE_2 = (2 * Math.PI) / 3;
 const ANGLE_3 = (4 * Math.PI) / 3;
 
+export interface HaloProgramOptions {
+  ignoreZoom?: boolean;
+}
+
 // NOTE: color could become a uniform in performance scenarios
-// TODO: sometimes you might want to avoid camera correction
-export default function createNodeHaloProgram(): NodeProgramConstructor {
+export default function createNodeHaloProgram(options?: HaloProgramOptions): NodeProgramConstructor {
+  options = options || {};
+
+  const ignoreZoom = options.ignoreZoom === true;
+
   const vertexShaderSource = `
     attribute vec2 a_position;
     attribute float a_size;
@@ -36,7 +43,7 @@ export default function createNodeHaloProgram(): NodeProgramConstructor {
     const float marginRatio = 1.05;
 
     void main() {
-      float size = a_size * u_correctionRatio * u_sqrtZoomRatio * 4.0;
+      float size = a_size * u_correctionRatio * u_sqrtZoomRatio${ignoreZoom ? " / u_sqrtZoomRatio" : ""} * 4.0;
       vec2 diffVector = size * vec2(cos(a_angle), sin(a_angle));
       vec2 position = a_position + diffVector * marginRatio;
       gl_Position = vec4(
