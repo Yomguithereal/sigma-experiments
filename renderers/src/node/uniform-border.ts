@@ -119,6 +119,8 @@ export default function createNodeUniformBorderProgram(
     }
 
     render(params: RenderParams): void {
+      if (this.hasNothingToRender()) return;
+
       const gl = this.gl;
 
       const program = this.program;

@@ -10,6 +10,7 @@ import forceAtlas2 from "graphology-layout-forceatlas2";
 
 import createNodeThreeCirclesProgram from "../src/node/three-circles";
 import createNodeUniformBorderProgram from "../src/node/uniform-border";
+import createNodeBorderProgram from "../src/node/border";
 import NodeCircleProgram from "sigma/rendering/webgl/programs/node.fast";
 import NodeHaloProgram from "../src/node/halo";
 
@@ -65,6 +66,7 @@ graph.updateEachNodeAttributes((node, attr) => {
     insideColor: "yellow",
     dotColor: "black",
     haloIntensity: Math.random(),
+    borderColor: Math.random() > 0.5 ? "green" : "yellow",
   };
 });
 
@@ -72,10 +74,11 @@ const container = document.getElementById("container") as HTMLDivElement;
 
 const renderer = new Sigma(graph, container, {
   nodeProgramClasses: {
+    border: createNodeBorderProgram(0.3),
     uniformBorder: createNodeUniformBorderProgram("rgba(0, 0, 0, 0.8)", 0.5),
     threeCircles: createNodeThreeCirclesProgram(0.3, 0.95),
     halo: NodeHaloProgram,
     heatmap: createNodeCompoundProgram([NodeHaloProgram, NodeCircleProgram]),
   },
-  defaultNodeType: "uniformBorder",
+  defaultNodeType: "border",
 });
