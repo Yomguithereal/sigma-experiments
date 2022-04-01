@@ -10,8 +10,10 @@
     "*.d.ts"
   ],
   "scripts": {
+    "dist": "tsc -p ./tsconfig.transpile.json -d",
     "clean": "rm -rf ./node index.js index.d.ts",
     "dev": "kotatsu serve --ts ftest/ftest.ts --index ftest/index.html --open",
+    "prepare": "npm run dist",
     "prettier": "prettier --write '**/*.ts'"
   },
   "repository": {
@@ -39,7 +41,7 @@
     "graphology-components": "^1.5.2",
     "graphology-generators": "^0.11.2",
     "graphology-layout": "^0.5.0",
-    "graphology-layout-forceatlas2": "^0.9.0",
+    "graphology-layout-forceatlas2": "^0.9.1",
     "kotatsu": "^0.22.3",
     "prettier": "^2.6.1",
     "sigma": "^2.2.0",
