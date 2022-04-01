@@ -12,7 +12,7 @@ import createNodeThreeCirclesProgram from "../src/node/three-circles";
 import createNodeUniformBorderProgram from "../src/node/uniform-border";
 import createNodeBorderProgram from "../src/node/border";
 import NodeCircleProgram from "sigma/rendering/webgl/programs/node.fast";
-import NodeHaloProgram from "../src/node/halo";
+import createNodeHaloProgram from "../src/node/halo";
 
 function createNodeCompoundProgram(programClasses: Array<NodeProgramConstructor>): NodeProgramConstructor {
   return class NodeCompoundProgram implements INodeProgram {
@@ -77,8 +77,8 @@ const renderer = new Sigma(graph, container, {
     border: createNodeBorderProgram(0.3),
     uniformBorder: createNodeUniformBorderProgram("rgba(0, 0, 0, 0.8)", 0.5),
     threeCircles: createNodeThreeCirclesProgram(0.3, 0.95),
-    halo: NodeHaloProgram,
-    heatmap: createNodeCompoundProgram([NodeHaloProgram, NodeCircleProgram]),
+    halo: createNodeHaloProgram(),
+    heatmap: createNodeCompoundProgram([createNodeHaloProgram(), NodeCircleProgram]),
   },
-  defaultNodeType: "border",
+  defaultNodeType: "halo",
 });
