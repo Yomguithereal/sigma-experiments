@@ -1,5 +1,10 @@
 node_modules
 .DS_Store
-./node
-index.js
+
+dist
+build
+
+/hover
+/node
 *.d.ts
+*.js

@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "dist": "tsc -p ./tsconfig.transpile.json -d",
-    "clean": "rm -rf ./node index.js index.d.ts",
+    "clean": "rm -rf node *.js *.d.ts",
     "dev": "kotatsu serve --ts ftest/ftest.ts --index ftest/index.html --open",
     "prepare": "npm run dist",
     "prettier": "prettier --write '**/*.ts'"
