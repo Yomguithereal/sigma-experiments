@@ -52,13 +52,12 @@ export default function createNodeUniformBorderProgram(borderRatio: number = 0.1
 
     const float radius = 0.5;
     const float halfRadius = ${templateBorderRatio};
+    const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
 
     void main(void) {
-      vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
       vec4 border_color = vec4(0.0, 0.0, 1.0, 1.0);
       float distToCenter = length(gl_PointCoord - vec2(0.5, 0.5));
 
-      float t = 0.0;
       if (distToCenter < halfRadius - v_border)
         gl_FragColor = v_color;
       else if (distToCenter < halfRadius)
