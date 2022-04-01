@@ -14,7 +14,8 @@
     "clean": "rm -rf node *.js *.d.ts",
     "dev": "kotatsu serve --ts ftest/ftest.ts --index ftest/index.html --open",
     "prepare": "npm run dist",
-    "prettier": "prettier --write '**/*.ts'"
+    "prettier": "prettier --write '**/*.ts'",
+    "postpublish": "npm run clean"
   },
   "repository": {
     "type": "git",
