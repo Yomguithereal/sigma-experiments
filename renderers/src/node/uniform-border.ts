@@ -7,7 +7,7 @@ import { floatColor } from "sigma/utils";
 import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor, AbstractNodeProgram } from "sigma/rendering/webgl/programs/common/node";
 
-import { colorToFloatArray } from "../utils";
+import { colorToFloatArray } from "./utils";
 
 export default function createNodeUniformBorderProgram(
   borderColor: string = "white",

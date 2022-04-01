@@ -5,7 +5,7 @@ import { NodeDisplayData } from "sigma/types";
 import { AbstractProgram, RenderParams } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor } from "sigma/rendering/webgl/programs/common/node";
 
-import { colorToFloatArray } from "../utils";
+import { colorToFloatArray } from "./utils";
 
 const POINTS = 3;
 const ATTRIBUTES = 5;
@@ -14,13 +14,13 @@ const ANGLE_1 = 0;
 const ANGLE_2 = (2 * Math.PI) / 3;
 const ANGLE_3 = (4 * Math.PI) / 3;
 
-export interface HaloProgramOptions {
+export interface UniformHaloProgramOptions {
   color?: string;
   ignoreZoom?: boolean;
 }
 
 // NOTE: color could become a uniform in performance scenarios
-export default function createNodeUniformHaloProgram(options?: HaloProgramOptions): NodeProgramConstructor {
+export default function createNodeUniformHaloProgram(options?: UniformHaloProgramOptions): NodeProgramConstructor {
   options = options || {};
 
   const ignoreZoom = options.ignoreZoom === true;
