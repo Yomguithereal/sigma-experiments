@@ -1,9 +1,16 @@
+// Original author: @jacomyal
+// A node renderer using one triangle to render three overlapped circles
+// with increasing size.
+
 import { NodeDisplayData } from "sigma/types";
 import { floatColor } from "sigma/utils";
 import { RenderParams, AbstractProgram } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor } from "sigma/rendering/webgl/programs/common/node";
 
-export default function createThreeCirclesNodeProgram(): NodeProgramConstructor {
+export default function createThreeCirclesNodeProgram(
+  dotSizeRatio: number = 0.3,
+  innerSizeRatio: number = 0.7,
+): NodeProgramConstructor {
   const vertexShaderSource = `
     attribute vec2 a_position;
     attribute float a_size;
@@ -63,8 +70,8 @@ export default function createThreeCirclesNodeProgram(): NodeProgramConstructor 
     const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
 
     void main(void) {
-      float halfRadius = 0.7 * v_radius;
-      float dotRadius = 0.3 * v_radius;
+      float halfRadius = ${innerSizeRatio || "0.0"} * v_radius;
+      float dotRadius = ${dotSizeRatio || "0.0"} * v_radius;
       float distToCenter = length(v_diffVector);
 
       // Inner dot

@@ -71,7 +71,7 @@ const container = document.getElementById("container") as HTMLDivElement;
 
 const renderer = new Sigma(graph, container, {
   nodeProgramClasses: {
-    threeCircles: createThreeCirclesNodeProgram(),
+    threeCircles: createThreeCirclesNodeProgram(0.3, 0.95),
     halo: NodeHaloProgram,
     heatmap: createNodeCompoundProgram([NodeHaloProgram, NodeCircleProgram]),
   },

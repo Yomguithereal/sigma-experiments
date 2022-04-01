@@ -1,3 +1,6 @@
+// A node renderer using one triangle to render a blurry halo useful to render
+// a basic heatmap
+
 import { NodeDisplayData } from "sigma/types";
 import { floatColor } from "sigma/utils";
 
