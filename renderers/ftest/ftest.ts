@@ -13,6 +13,7 @@ import createNodeUniformBorderProgram from "../src/node/uniform-border";
 import createNodeBorderProgram from "../src/node/border";
 import createNodeHaloProgram from "../src/node/halo";
 import createNodeUniformHaloProgram from "../src/node/uniform-halo";
+import createNodeBipartiteProgram from "../src/node/bipartite";
 
 const graph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
 cropToLargestConnectedComponent(graph);
@@ -33,6 +34,7 @@ graph.updateEachNodeAttributes((node, attr) => {
     dotColor: "black",
     haloIntensity: Math.random(),
     borderColor: Math.random() > 0.5 ? "green" : "yellow",
+    triangle: Math.random() > 0.5,
   };
 });
 
@@ -52,6 +54,7 @@ window.renderer = new Sigma(graph, container, {
     halo: createNodeHaloProgram(),
     heatmap: createNodeCompoundProgram([createNodeHaloProgram(), NodeCircleProgram]),
     uniformHalo: createNodeUniformHaloProgram({ haloColor: "purple" }),
+    bipartite: createNodeBipartiteProgram(),
   },
-  defaultNodeType: "threeCircles",
+  defaultNodeType: "bipartite",
 });

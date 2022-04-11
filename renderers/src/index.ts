@@ -1,3 +1,4 @@
+export { default as createNodeBipartiteProgram } from "./node/bipartite";
 export { default as createNodeBorderProgram } from "./node/border";
 export { default as createNodeUniformBorderProgram } from "./node/uniform-border";
 export { default as createNodeHaloProgram } from "./node/halo";
