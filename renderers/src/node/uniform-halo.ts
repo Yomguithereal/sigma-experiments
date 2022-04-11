@@ -2,10 +2,9 @@
 // a basic heatmap with uniform color.
 
 import { NodeDisplayData } from "sigma/types";
+import { floatArrayColor } from "sigma/utils";
 import { AbstractProgram, RenderParams } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor } from "sigma/rendering/webgl/programs/common/node";
-
-import { colorToFloatArray } from "./utils";
 
 const POINTS = 3;
 const ATTRIBUTES = 5;
@@ -24,7 +23,7 @@ export default function createNodeUniformHaloProgram(options?: UniformHaloProgra
   options = options || {};
 
   const ignoreZoom = options.ignoreZoom === true;
-  const haloColorAsFloatArray = colorToFloatArray(options.color || "#ccc");
+  const haloColorAsFloatArray = floatArrayColor(options.color || "#ccc");
 
   const vertexShaderSource = `
     attribute vec2 a_position;

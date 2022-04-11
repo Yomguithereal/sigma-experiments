@@ -3,11 +3,9 @@
 // border with uniform color.
 
 import { NodeDisplayData } from "sigma/types";
-import { floatColor } from "sigma/utils";
+import { floatColor, floatArrayColor } from "sigma/utils";
 import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor, AbstractNodeProgram } from "sigma/rendering/webgl/programs/common/node";
-
-import { colorToFloatArray } from "./utils";
 
 export default function createNodeUniformBorderProgram(
   borderColor: string = "white",
@@ -15,7 +13,7 @@ export default function createNodeUniformBorderProgram(
 ): NodeProgramConstructor {
   let templateBorderRatio = "" + (0.5 - borderRatio / 2);
 
-  const borderColorAsFloatArray = colorToFloatArray(borderColor);
+  const borderColorAsFloatArray = floatArrayColor(borderColor);
 
   const vertexShaderSource = `
     attribute vec2 a_position;

@@ -45,7 +45,7 @@
     "graphology-layout-forceatlas2": "^0.9.1",
     "kotatsu": "^0.22.3",
     "prettier": "^2.6.1",
-    "sigma": "^2.2.0",
+    "sigma": "^2.3.0",
     "typescript": "^4.6.3"
   }
 }
