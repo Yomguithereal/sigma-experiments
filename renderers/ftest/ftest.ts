@@ -46,12 +46,12 @@ declare global {
 
 window.renderer = new Sigma(graph, container, {
   nodeProgramClasses: {
-    border: createNodeBorderProgram(0.3),
-    uniformBorder: createNodeUniformBorderProgram("rgba(0, 0, 0, 0.8)", 0.5),
-    threeCircles: createNodeThreeCirclesProgram(0.3, 0.95),
+    border: createNodeBorderProgram(),
+    uniformBorder: createNodeUniformBorderProgram({ borderRatio: 0.2 }),
+    threeCircles: createNodeThreeCirclesProgram({ dotSizeRatio: 0.3, innerSizeRatio: 0.95 }),
     halo: createNodeHaloProgram(),
     heatmap: createNodeCompoundProgram([createNodeHaloProgram(), NodeCircleProgram]),
-    uniformHalo: createNodeUniformHaloProgram({ color: "blue" }),
+    uniformHalo: createNodeUniformHaloProgram({ haloColor: "purple" }),
   },
-  defaultNodeType: "heatmap",
+  defaultNodeType: "threeCircles",
 });

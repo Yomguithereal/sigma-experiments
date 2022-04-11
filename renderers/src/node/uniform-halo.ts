@@ -13,17 +13,25 @@ const ANGLE_1 = 0;
 const ANGLE_2 = (2 * Math.PI) / 3;
 const ANGLE_3 = (4 * Math.PI) / 3;
 
-export interface UniformHaloProgramOptions {
-  color?: string;
+export type NodeUniformHaloProgramOptions = {
   ignoreZoom?: boolean;
-}
+  haloSizeAttributeName?: string;
+  haloIntensityAttributeName?: string;
+  haloColor?: string;
+};
 
 // NOTE: color could become a uniform in performance scenarios
-export default function createNodeUniformHaloProgram(options?: UniformHaloProgramOptions): NodeProgramConstructor {
+export default function createNodeUniformHaloProgram(options?: NodeUniformHaloProgramOptions): NodeProgramConstructor {
   options = options || {};
 
-  const ignoreZoom = options.ignoreZoom === true;
-  const haloColorAsFloatArray = floatArrayColor(options.color || "#ccc");
+  const {
+    ignoreZoom = false,
+    haloSizeAttributeName = "haloSize",
+    haloIntensityAttributeName = "haloIntensity",
+    haloColor = "#ccc",
+  } = options;
+
+  const haloColorAsFloatArray = floatArrayColor(haloColor);
 
   const vertexShaderSource = `
     attribute vec2 a_position;
@@ -167,11 +175,7 @@ export default function createNodeUniformHaloProgram(options?: UniformHaloProgra
       );
     }
 
-    process(
-      data: NodeDisplayData & { haloIntensity: number; haloSize: number; haloColor: string },
-      hidden: boolean,
-      offset: number,
-    ): void {
+    process(data: NodeDisplayData & { [name: string]: number }, hidden: boolean, offset: number): void {
       const array = this.array;
       let i = offset * POINTS * ATTRIBUTES;
 
@@ -180,8 +184,8 @@ export default function createNodeUniformHaloProgram(options?: UniformHaloProgra
         return;
       }
 
-      const intensity = typeof data.haloIntensity === "number" ? data.haloIntensity : 1.0;
-      const size = Math.max(data.haloSize || 0, data.size);
+      const intensity = typeof data[haloIntensityAttributeName] === "number" ? data[haloIntensityAttributeName] : 1.0;
+      const size = Math.max(data[haloSizeAttributeName] || 0, data.size);
 
       array[i++] = data.x;
       array[i++] = data.y;

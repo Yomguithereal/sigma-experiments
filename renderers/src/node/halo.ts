@@ -13,15 +13,23 @@ const ANGLE_1 = 0;
 const ANGLE_2 = (2 * Math.PI) / 3;
 const ANGLE_3 = (4 * Math.PI) / 3;
 
-export interface HaloProgramOptions {
+export type NodeHaloProgramOptions = {
   ignoreZoom?: boolean;
-}
+  haloColorAttributeName?: string;
+  haloSizeAttributeName?: string;
+  haloIntensityAttributeName?: string;
+};
 
 // NOTE: color could become a uniform in performance scenarios
-export default function createNodeHaloProgram(options?: HaloProgramOptions): NodeProgramConstructor {
+export default function createNodeHaloProgram(options?: NodeHaloProgramOptions): NodeProgramConstructor {
   options = options || {};
 
-  const ignoreZoom = options.ignoreZoom === true;
+  const {
+    ignoreZoom = false,
+    haloColorAttributeName = "haloColor",
+    haloSizeAttributeName = "haloSize",
+    haloIntensityAttributeName = "haloIntensity",
+  } = options;
 
   const vertexShaderSource = `
     attribute vec2 a_position;
@@ -173,11 +181,7 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
       );
     }
 
-    process(
-      data: NodeDisplayData & { haloIntensity: number; haloSize: number; haloColor: string },
-      hidden: boolean,
-      offset: number,
-    ): void {
+    process(data: NodeDisplayData & { [name: string]: string | number }, hidden: boolean, offset: number): void {
       const array = this.array;
       let i = offset * POINTS * ATTRIBUTES;
 
@@ -186,9 +190,11 @@ export default function createNodeHaloProgram(options?: HaloProgramOptions): Nod
         return;
       }
 
-      const color = floatColor(data.haloColor || data.color);
-      const intensity = typeof data.haloIntensity === "number" ? data.haloIntensity : 1.0;
-      const size = Math.max(data.haloSize || 0, data.size);
+      const color = floatColor((data[haloColorAttributeName] || data.color) as string);
+      const intensity = (
+        typeof data[haloIntensityAttributeName] === "number" ? data[haloIntensityAttributeName] : 1.0
+      ) as number;
+      const size = Math.max((data[haloSizeAttributeName] as number) || 0, data.size);
 
       array[i++] = data.x;
       array[i++] = data.y;

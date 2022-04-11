@@ -7,10 +7,25 @@ import { floatColor } from "sigma/utils";
 import { RenderParams, AbstractProgram } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor } from "sigma/rendering/webgl/programs/common/node";
 
+export type NodeThreeCirclesProgramOptions = {
+  dotSizeRatio?: number;
+  innerSizeRatio?: number;
+  dotColorAttributeName?: string;
+  insideColorAttributeName?: string;
+};
+
 export default function createNodeThreeCirclesProgram(
-  dotSizeRatio: number = 0.3,
-  innerSizeRatio: number = 0.7,
+  options?: NodeThreeCirclesProgramOptions,
 ): NodeProgramConstructor {
+  options = options || {};
+
+  const {
+    dotSizeRatio = 0.3,
+    innerSizeRatio = 0.7,
+    dotColorAttributeName = "dotColor",
+    insideColorAttributeName = "insideColor",
+  } = options;
+
   const vertexShaderSource = `
     attribute vec2 a_position;
     attribute float a_size;
@@ -218,12 +233,12 @@ export default function createNodeThreeCirclesProgram(
       );
     }
 
-    process(data: NodeDisplayData & { dotColor: string; insideColor: string }, hidden: boolean, offset: number): void {
+    process(data: NodeDisplayData & { [name: string]: string }, hidden: boolean, offset: number): void {
       const color = floatColor(data.color);
 
       // custom
-      const insideColor = floatColor(data.insideColor || data.color);
-      const dotColor = floatColor(data.dotColor || data.insideColor || data.color);
+      const insideColor = floatColor(data[insideColorAttributeName] || data.color);
+      const dotColor = floatColor(data[dotColorAttributeName] || data[insideColorAttributeName] || data.color);
 
       let i = offset * POINTS * ATTRIBUTES;
       const array = this.array;

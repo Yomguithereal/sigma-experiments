@@ -7,10 +7,18 @@ import { floatColor, floatArrayColor } from "sigma/utils";
 import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor, AbstractNodeProgram } from "sigma/rendering/webgl/programs/common/node";
 
+export type NodeUniformBorderProgramOptions = {
+  borderColor?: string;
+  borderRatio?: number;
+};
+
 export default function createNodeUniformBorderProgram(
-  borderColor: string = "white",
-  borderRatio: number = 0.1,
+  options?: NodeUniformBorderProgramOptions,
 ): NodeProgramConstructor {
+  options = options || {};
+
+  const { borderRatio = 0.1, borderColor = "white" } = options;
+
   let templateBorderRatio = "" + (0.5 - borderRatio / 2);
 
   const borderColorAsFloatArray = floatArrayColor(borderColor);

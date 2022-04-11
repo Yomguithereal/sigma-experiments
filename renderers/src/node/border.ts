@@ -7,7 +7,16 @@ import { floatColor } from "sigma/utils";
 import { RenderParams, AbstractProgram } from "sigma/rendering/webgl/programs/common/program";
 import { NodeProgramConstructor } from "sigma/rendering/webgl/programs/common/node";
 
-export default function createNodeBorderProgram(borderRatio: number = 0.1): NodeProgramConstructor {
+export type NodeBorderProgramOptions = {
+  borderRatio?: number;
+  borderColorAttributeName?: string;
+};
+
+export default function createNodeBorderProgram(options?: NodeBorderProgramOptions): NodeProgramConstructor {
+  options = options || {};
+
+  const { borderRatio = 0.1, borderColorAttributeName = "borderColor" } = options;
+
   let templateBorderRatio = "" + (0.5 - borderRatio / 2);
 
   const vertexShaderSource = `
@@ -156,7 +165,7 @@ export default function createNodeBorderProgram(borderRatio: number = 0.1): Node
       );
     }
 
-    process(data: NodeDisplayData & { borderColor: string }, hidden: boolean, offset: number): void {
+    process(data: NodeDisplayData & { [name: string]: string }, hidden: boolean, offset: number): void {
       const array = this.array;
       let i = offset * POINTS * ATTRIBUTES;
 
@@ -170,7 +179,7 @@ export default function createNodeBorderProgram(borderRatio: number = 0.1): Node
       }
 
       const color = floatColor(data.color);
-      const borderColor = floatColor(data.borderColor);
+      const borderColor = floatColor(data[borderColorAttributeName]);
 
       array[i++] = data.x;
       array[i++] = data.y;
