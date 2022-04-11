@@ -1,6 +1,6 @@
 {
   "name": "@yomguithereal/sigma-experiments-renderers",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Various alternative renderers for sigma.js v2.",
   "main": "index.js",
   "types": "index.d.ts",
