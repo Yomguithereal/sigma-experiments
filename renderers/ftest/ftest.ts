@@ -5,50 +5,14 @@ import randomLayout from "graphology-layout/random";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 
 import Sigma from "sigma";
-import { NodeDisplayData } from "sigma/types";
-import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
-import { NodeProgramConstructor, INodeProgram } from "sigma/rendering/webgl/programs/common/node";
 import NodeCircleProgram from "sigma/rendering/webgl/programs/node.fast";
+import { createNodeCompoundProgram } from "sigma/rendering/webgl/programs/common/node";
 
 import createNodeThreeCirclesProgram from "../src/node/three-circles";
 import createNodeUniformBorderProgram from "../src/node/uniform-border";
 import createNodeBorderProgram from "../src/node/border";
 import createNodeHaloProgram from "../src/node/halo";
 import createNodeUniformHaloProgram from "../src/node/uniform-halo";
-
-function createNodeCompoundProgram(programClasses: Array<NodeProgramConstructor>): NodeProgramConstructor {
-  return class NodeCompoundProgram implements INodeProgram {
-    programs: Array<INodeProgram>;
-
-    constructor(gl: WebGLRenderingContext, renderer: Sigma) {
-      this.programs = programClasses.map((ProgramClass) => new ProgramClass(gl, renderer));
-    }
-
-    bufferData(): void {
-      this.programs.forEach((program) => program.bufferData());
-    }
-
-    allocate(capacity: number): void {
-      this.programs.forEach((program) => program.allocate(capacity));
-    }
-
-    bind(): void {
-      // nothing todo, it's already done in each program constructor
-    }
-
-    render(params: RenderParams): void {
-      this.programs.forEach((program) => {
-        program.bind();
-        program.bufferData();
-        program.render(params);
-      });
-    }
-
-    process(data: NodeDisplayData, hidden: boolean, offset: number): void {
-      this.programs.forEach((program) => program.process(data, hidden, offset));
-    }
-  };
-}
 
 const graph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
 cropToLargestConnectedComponent(graph);
@@ -89,5 +53,5 @@ window.renderer = new Sigma(graph, container, {
     heatmap: createNodeCompoundProgram([createNodeHaloProgram(), NodeCircleProgram]),
     uniformHalo: createNodeUniformHaloProgram({ color: "blue" }),
   },
-  defaultNodeType: "uniformHalo",
+  defaultNodeType: "heatmap",
 });
