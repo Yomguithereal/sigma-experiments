@@ -33,13 +33,10 @@ const vertexShaderSource = `#version 300 es
   flat out vec2 v_cpB;
   flat out vec2 v_cpC;
   out float strokeWidth;
-  out float test;
-  out vec2 test2;
-  out vec3 test3;
 
   const float minThickness = 1.7;
   const float bias = 255.0 / 254.0;
-  const float curveness = 0.7;
+  const float curveness = 0.3;
 
   vec2 clipspaceToViewport(vec2 pos, vec2 dimensions) {
     return vec2(
@@ -49,12 +46,16 @@ const vertexShaderSource = `#version 300 es
   }
 
   void main() {
+    // vec2 delta = a_target - a_source;
+    // float len = length(delta);
+    // float width = 2.0 * curveness * len;
+    // vec2 normal = vec2(delta.y, -delta.x) * sign(a_normal);
+    // vec2 unitNormal = normalize(normal);
+    // float normalLength = length(normal);
+
     float normalLength = length(a_normal);
     vec2 unitNormal = a_normal / normalLength;
-    strokeWidth = normalLength;
-    test = 1.0;
-    test2 = vec2(1.0, 0.5);
-    test3 = vec3(1.0, 1.0, 1.0);
+    strokeWidth = 5.0;
 
     // We require edges to be at least "minThickness" pixels thick *on screen*
     // (so we need to compensate the SQRT zoom ratio):
@@ -106,9 +107,6 @@ const fragmentShaderSource = `#version 300 es
   flat in vec2 v_cpA;
   flat in vec2 v_cpB;
   flat in vec2 v_cpC;
-  in float test;
-  in vec2 test2;
-  in vec3 test3;
   in float v_thickness;
   out vec4 fragColor;
 
@@ -146,8 +144,8 @@ const fragmentShaderSource = `#version 300 es
     // fragColor = vec4(dist, dist, dist, 1.0);
     // return;
 
-    if (dist < v_thickness + epsilon) {
-      float inCurve = 1. - smoothstep(v_thickness - epsilon, v_thickness + epsilon, dist);
+    if (dist < strokeWidth + epsilon) {
+      float inCurve = 1.0 - smoothstep(strokeWidth - epsilon, strokeWidth + epsilon, dist);
       fragColor = inCurve * vec4(v_color.rgb * v_color.a, v_color.a);
     } else {
       fragColor = transparent;
