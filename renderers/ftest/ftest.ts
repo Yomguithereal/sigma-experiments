@@ -6,6 +6,7 @@ import forceAtlas2 from "graphology-layout-forceatlas2";
 
 import Sigma from "sigma";
 import NodeCircleProgram from "sigma/rendering/webgl/programs/node.fast";
+import EdgeProgram from "sigma/rendering/webgl/programs/edge";
 import { createNodeCompoundProgram } from "sigma/rendering/webgl/programs/common/node";
 
 import createNodeThreeCirclesProgram from "../src/node/three-circles";
@@ -14,6 +15,7 @@ import createNodeBorderProgram from "../src/node/border";
 import createNodeHaloProgram from "../src/node/halo";
 import createNodeUniformHaloProgram from "../src/node/uniform-halo";
 import createNodeBipartiteProgram from "../src/node/bipartite";
+import EdgeCurveProgram from "../src/edge/curve";
 
 const graph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
 cropToLargestConnectedComponent(graph);
@@ -38,6 +40,10 @@ graph.updateEachNodeAttributes((node, attr) => {
   };
 });
 
+graph.updateEachEdgeAttributes((edge, attr) => {
+  return { ...attr, size: 0.5 };
+});
+
 const container = document.getElementById("container") as HTMLDivElement;
 
 declare global {
@@ -48,6 +54,7 @@ declare global {
 
 window.renderer = new Sigma(graph, container, {
   nodeProgramClasses: {
+    circle: NodeCircleProgram,
     border: createNodeBorderProgram(),
     uniformBorder: createNodeUniformBorderProgram({ borderRatio: 0.2 }),
     threeCircles: createNodeThreeCirclesProgram({ dotSizeRatio: 0.3, innerSizeRatio: 0.95 }),
@@ -56,5 +63,10 @@ window.renderer = new Sigma(graph, container, {
     uniformHalo: createNodeUniformHaloProgram({ haloColor: "purple" }),
     bipartite: createNodeBipartiteProgram(),
   },
-  defaultNodeType: "bipartite",
+  edgeProgramClasses: {
+    line: EdgeProgram,
+    curve: EdgeCurveProgram,
+  },
+  defaultNodeType: "circle",
+  defaultEdgeType: "curve",
 });

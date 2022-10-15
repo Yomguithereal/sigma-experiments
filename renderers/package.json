@@ -5,13 +5,14 @@
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
+    "edge",
     "node",
     "index.js",
     "*.d.ts"
   ],
   "scripts": {
     "dist": "tsc -p ./tsconfig.transpile.json -d",
-    "clean": "rm -rf node *.js *.d.ts",
+    "clean": "rm -rf edge node *.js *.d.ts",
     "dev": "kotatsu serve ftest/ftest.ts --index ftest/index.html --open",
     "prepare": "npm run dist",
     "prettier": "prettier --write '**/*.ts'",
@@ -45,7 +46,7 @@
     "graphology-layout-forceatlas2": "^0.10.0",
     "graphology-types": "0.24.5",
     "kotatsu": "^0.23.1",
-    "prettier": "^2.6.1",
+    "prettier": "^2.7.1",
     "sigma": "^2.3.1",
     "typescript": "^4.8.4"
   }
