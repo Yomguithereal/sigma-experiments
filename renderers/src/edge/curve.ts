@@ -11,13 +11,15 @@ import { AbstractEdgeProgram } from "sigma/rendering/webgl/programs/common/edge"
 import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
 
 const POINTS = 4;
-const ATTRIBUTES = 5;
+const ATTRIBUTES = 9;
 const STRIDE = POINTS * ATTRIBUTES;
 
 const vertexShaderSource = `
   attribute vec4 a_color;
   attribute vec2 a_normal;
   attribute vec2 a_position;
+  attribute vec2 a_source;
+  attribute vec2 a_target;
 
   uniform mat3 u_matrix;
   uniform float u_sqrtZoomRatio;
@@ -26,9 +28,13 @@ const vertexShaderSource = `
   varying vec4 v_color;
   varying vec2 v_normal;
   varying float v_thickness;
+  varying vec2 v_cpA;
+  varying vec2 v_cpB;
+  varying vec2 v_cpC;
 
   const float minThickness = 1.7;
   const float bias = 255.0 / 254.0;
+  const float curveness = 0.3;
 
   void main() {
     float normalLength = length(a_normal);
@@ -52,6 +58,15 @@ const vertexShaderSource = `
     // Here is the proper position of the vertex
     gl_Position = vec4((u_matrix * vec3(a_position + unitNormal * adaptedWebGLThickness, 1)).xy, 0, 1);
 
+    vec2 sourcePosition = (u_matrix * vec3(a_source, 1)).xy;
+    vec2 targetPosition = (u_matrix * vec3(a_target, 1)).xy;
+
+    vec2 center = 0.5 * (a_source + a_target);
+
+    v_cpA = sourcePosition;
+    v_cpB = (u_matrix * vec3(center + abs(unitNormal) * adaptedWebGLThickness, 1)).xy;
+    v_cpC = targetPosition;
+
     // For the fragment shader though, we need a thickness that takes the "magic"
     // correction ratio into account (as in webGLThickness), but so that the
     // antialiasing effect does not depend on the zoom level. So here's yet
@@ -69,21 +84,62 @@ const fragmentShaderSource = `
 
   varying vec4 v_color;
   varying vec2 v_normal;
+  varying vec2 v_cpA;
+  varying vec2 v_cpB;
+  varying vec2 v_cpC;
   varying float v_thickness;
 
   const float feather = 0.001;
-  const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
+  const vec4 transparent = vec4(0.0, 0.0, 0.0, 1.0);
+
+  float det(vec2 a, vec2 b) {
+    return a.x * b.y - b.x * a.y;
+  }
+
+  vec2 get_distance_vector(vec2 b0, vec2 b1, vec2 b2) {
+    float a = det(b0, b2), b = 2.0 * det(b1, b0), d = 2.0 * det(b2, b1);
+    float f = b * d - a * a;
+    vec2 d21 = b2 - b1, d10 = b1 - b0, d20 = b2 - b0;
+    vec2 gf = 2.0 * (b * d21 + d * d10 + a * d20);
+    gf = vec2(gf.y, -gf.x);
+    vec2 pp = -f * gf / dot(gf, gf);
+    vec2 d0p = b0 - pp;
+    float ap = det(d0p, d20), bp = 2.0 * det(d10, d0p);
+    float t = clamp((ap + bp) / (2.0 * a + b + d), 0.0, 1.0);
+    return mix(mix(b0, b1, t), mix(b1, b2, t), t);
+  }
+
+  float distToQuadraticBezierCurve(vec2 p, vec2 b0, vec2 b1, vec2 b2) {
+    return length(get_distance_vector(b0 - p, b1 - p, b2 - p));
+  }
 
   void main(void) {
-    float dist = length(v_normal) * v_thickness;
+    vec2 pos = gl_FragCoord.xy;
 
-    float t = smoothstep(
-      v_thickness - feather,
-      v_thickness,
-      dist
-    );
+    float dist = distToQuadraticBezierCurve(pos, v_cpA, v_cpB, v_cpC);
 
-    gl_FragColor = mix(v_color, transparent, t);
+    // float epsilon = 0.05;
+
+    gl_FragColor = mix(v_color, transparent, dist);
+    gl_FragColor = vec4(dist, dist, dist, 1.0);
+
+    // if (dist < v_thickness + epsilon) {
+    //   float inCurve = 1. - smoothstep(v_thickness - epsilon, v_thickness + epsilon, dist);
+    //   gl_FragColor = inCurve * vec4(v_color.rgb * v_color.a, v_color.a);
+    // } else {
+    //   discard;
+    // }
+
+
+    // float dist = length(v_normal) * v_thickness;
+
+    // float t = smoothstep(
+    //   v_thickness - feather,
+    //   v_thickness,
+    //   dist
+    // );
+
+    // gl_FragColor = mix(v_color, transparent, t);
   }
 `;
 
@@ -96,6 +152,8 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
   positionLocation: GLint;
   colorLocation: GLint;
   normalLocation: GLint;
+  sourceLocation: GLint;
+  targetLocation: GLint;
   matrixLocation: WebGLUniformLocation;
   sqrtZoomRatioLocation: WebGLUniformLocation;
   correctionRatioLocation: WebGLUniformLocation;
@@ -112,6 +170,8 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     this.positionLocation = gl.getAttribLocation(this.program, "a_position");
     this.colorLocation = gl.getAttribLocation(this.program, "a_color");
     this.normalLocation = gl.getAttribLocation(this.program, "a_normal");
+    this.sourceLocation = gl.getAttribLocation(this.program, "a_source");
+    this.targetLocation = gl.getAttribLocation(this.program, "a_target");
 
     const matrixLocation = gl.getUniformLocation(this.program, "u_matrix");
     if (matrixLocation === null) throw new Error("EdgeProgram: error while getting matrixLocation");
@@ -159,6 +219,8 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
       ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
       16,
     );
+    gl.vertexAttribPointer(this.sourceLocation, 2, gl.FLOAT, false, ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT, 20);
+    gl.vertexAttribPointer(this.targetLocation, 2, gl.FLOAT, false, ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT, 28);
   }
 
   computeIndices(): void {
@@ -197,8 +259,8 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
       for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
       return;
     }
-    console.log("here");
-    const thickness = 10,
+
+    const thickness = 100,
       x1 = sourceData.x,
       y1 = sourceData.y,
       x2 = targetData.x,
@@ -230,6 +292,10 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     array[i++] = n1;
     array[i++] = n2;
     array[i++] = color;
+    array[i++] = x1;
+    array[i++] = y1;
+    array[i++] = x2;
+    array[i++] = y2;
 
     // First point flipped
     array[i++] = x1;
@@ -237,6 +303,10 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     array[i++] = -n1;
     array[i++] = -n2;
     array[i++] = color;
+    array[i++] = x1;
+    array[i++] = y1;
+    array[i++] = x2;
+    array[i++] = y2;
 
     // Second point
     array[i++] = x2;
@@ -244,13 +314,21 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     array[i++] = n1;
     array[i++] = n2;
     array[i++] = color;
+    array[i++] = x1;
+    array[i++] = y1;
+    array[i++] = x2;
+    array[i++] = y2;
 
     // Second point flipped
     array[i++] = x2;
     array[i++] = y2;
     array[i++] = -n1;
     array[i++] = -n2;
-    array[i] = color;
+    array[i++] = color;
+    array[i++] = x1;
+    array[i++] = y1;
+    array[i++] = x2;
+    array[i++] = y2;
   }
 
   render(params: RenderParams): void {
