@@ -12,7 +12,7 @@
   "scripts": {
     "dist": "tsc -p ./tsconfig.transpile.json -d",
     "clean": "rm -rf node *.js *.d.ts",
-    "dev": "kotatsu serve --ts ftest/ftest.ts --index ftest/index.html --open",
+    "dev": "kotatsu serve ftest/ftest.ts --index ftest/index.html --open",
     "prepare": "npm run dist",
     "prettier": "prettier --write '**/*.ts'",
     "postpublish": "npm run clean"
@@ -38,14 +38,15 @@
   },
   "homepage": "https://github.com/Yomguithereal/sigma-experiments/renderers#readme",
   "devDependencies": {
-    "graphology": "^0.24.1",
-    "graphology-components": "^1.5.2",
+    "graphology": "^0.25.0",
+    "graphology-components": "^1.5.4",
     "graphology-generators": "^0.11.2",
-    "graphology-layout": "^0.5.0",
-    "graphology-layout-forceatlas2": "^0.9.1",
-    "kotatsu": "^0.22.3",
+    "graphology-layout": "^0.6.1",
+    "graphology-layout-forceatlas2": "^0.10.0",
+    "graphology-types": "0.24.5",
+    "kotatsu": "^0.23.1",
     "prettier": "^2.6.1",
-    "sigma": "^2.3.0",
-    "typescript": "^4.6.3"
+    "sigma": "^2.3.1",
+    "typescript": "^4.8.4"
   }
 }
