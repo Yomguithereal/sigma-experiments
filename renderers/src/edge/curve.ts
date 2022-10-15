@@ -61,10 +61,8 @@ const vertexShaderSource = `
     vec2 sourcePosition = (u_matrix * vec3(a_source, 1)).xy;
     vec2 targetPosition = (u_matrix * vec3(a_target, 1)).xy;
 
-    vec2 center = 0.5 * (a_source + a_target);
-
     v_cpA = sourcePosition;
-    v_cpB = (u_matrix * vec3(center + abs(unitNormal) * adaptedWebGLThickness, 1)).xy;
+    v_cpB = (u_matrix * vec3(0.5 * (a_source + a_target) + unitNormal * adaptedWebGLThickness * curveness, 1)).xy;
     v_cpC = targetPosition;
 
     // For the fragment shader though, we need a thickness that takes the "magic"
@@ -114,14 +112,12 @@ const fragmentShaderSource = `
   }
 
   void main(void) {
-    vec2 pos = gl_FragCoord.xy;
-
-    float dist = distToQuadraticBezierCurve(pos, v_cpA, v_cpB, v_cpC);
+    float dist = distToQuadraticBezierCurve(gl_FragCoord.xy, v_cpA, v_cpB, v_cpC);
 
     // float epsilon = 0.05;
 
-    gl_FragColor = mix(v_color, transparent, dist);
-    gl_FragColor = vec4(dist, dist, dist, 1.0);
+    // gl_FragColor = mix(v_color, transparent, dist);
+    gl_FragColor = vec4(dist, 1.0, 1.0, 1.0);
 
     // if (dist < v_thickness + epsilon) {
     //   float inCurve = 1. - smoothstep(v_thickness - epsilon, v_thickness + epsilon, dist);
@@ -131,7 +127,7 @@ const fragmentShaderSource = `
     // }
 
 
-    // float dist = length(v_normal) * v_thickness;
+    // dist = length(v_normal) * v_thickness;
 
     // float t = smoothstep(
     //   v_thickness - feather,
