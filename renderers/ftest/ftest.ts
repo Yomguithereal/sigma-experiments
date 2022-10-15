@@ -19,6 +19,8 @@ import EdgeCurveProgram from "../src/edge/curve";
 
 const graph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
 cropToLargestConnectedComponent(graph);
+// const graph = new UndirectedGraph();
+// graph.mergeEdge(0, 1);
 
 randomLayout.assign(graph);
 forceAtlas2.assign(graph, { iterations: 100, settings: forceAtlas2.inferSettings(graph) });

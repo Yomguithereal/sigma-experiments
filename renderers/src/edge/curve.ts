@@ -24,21 +24,37 @@ const vertexShaderSource = `#version 300 es
   uniform mat3 u_matrix;
   uniform float u_sqrtZoomRatio;
   uniform float u_correctionRatio;
+  uniform vec2 u_dimensions;
 
   out vec4 v_color;
   out vec2 v_normal;
   out float v_thickness;
-  out vec2 v_cpA;
-  out vec2 v_cpB;
-  out vec2 v_cpC;
+  flat out vec2 v_cpA;
+  flat out vec2 v_cpB;
+  flat out vec2 v_cpC;
+  out float strokeWidth;
+  out float test;
+  out vec2 test2;
+  out vec3 test3;
 
   const float minThickness = 1.7;
   const float bias = 255.0 / 254.0;
-  const float curveness = 0.3;
+  const float curveness = 0.7;
+
+  vec2 clipspaceToViewport(vec2 pos, vec2 dimensions) {
+    return vec2(
+      (pos.x + 1.0) * (dimensions[0] / 2.0),
+      (pos.y + 1.0) * (dimensions[1] / 2.0)
+    );
+  }
 
   void main() {
     float normalLength = length(a_normal);
     vec2 unitNormal = a_normal / normalLength;
+    strokeWidth = normalLength;
+    test = 1.0;
+    test2 = vec2(1.0, 0.5);
+    test3 = vec3(1.0, 1.0, 1.0);
 
     // We require edges to be at least "minThickness" pixels thick *on screen*
     // (so we need to compensate the SQRT zoom ratio):
@@ -62,17 +78,12 @@ const vertexShaderSource = `#version 300 es
     vec2 targetPosition = (u_matrix * vec3(a_target, 1)).xy;
 
     v_cpA = sourcePosition;
-    v_cpB = (u_matrix * vec3(0.5 * (a_source + a_target) + abs(unitNormal) * adaptedWebGLThickness * curveness, 1)).xy;
+    v_cpB = 0.5 * (sourcePosition + targetPosition) + abs(unitNormal) * adaptedWebGLThickness * curveness;
     v_cpC = targetPosition;
 
-    // vec2 delta = a_target - a_source;
-    // vec2 center = 0.5 * (a_source + a_target);
-    // float len = length(delta);
-    // vec2 normal = normalize(vec2(delta.y, -delta.x));
-
-    // v_cpA = a_source;
-    // v_cpB = center + normal * len * curveness;
-    // v_cpC = a_target;
+    v_cpA = clipspaceToViewport(v_cpA, u_dimensions);
+    v_cpB = clipspaceToViewport(v_cpB, u_dimensions);
+    v_cpC = clipspaceToViewport(v_cpC, u_dimensions);
 
     // For the fragment shader though, we need a thickness that takes the "magic"
     // correction ratio into account (as in webGLThickness), but so that the
@@ -89,16 +100,21 @@ const vertexShaderSource = `#version 300 es
 const fragmentShaderSource = `#version 300 es
   precision highp float;
 
+  in float strokeWidth;
   in vec4 v_color;
   in vec2 v_normal;
-  in vec2 v_cpA;
-  in vec2 v_cpB;
-  in vec2 v_cpC;
+  flat in vec2 v_cpA;
+  flat in vec2 v_cpB;
+  flat in vec2 v_cpC;
+  in float test;
+  in vec2 test2;
+  in vec3 test3;
   in float v_thickness;
   out vec4 fragColor;
 
   const float feather = 0.001;
   const vec4 transparent = vec4(0.0, 0.0, 0.0, 1.0);
+  const float epsilon = 0.001;
 
   float det(vec2 a, vec2 b) {
     return a.x * b.y - b.x * a.y;
@@ -124,28 +140,29 @@ const fragmentShaderSource = `#version 300 es
   void main(void) {
     float dist = distToQuadraticBezierCurve(gl_FragCoord.xy, v_cpA, v_cpB, v_cpC);
 
-    // float epsilon = 0.05;
+    float epsilon = 0.05;
 
     // gl_FragColor = mix(v_color, transparent, dist);
-    fragColor = vec4(dist, dist, dist, 1.0);
+    // fragColor = vec4(dist, dist, dist, 1.0);
+    // return;
 
-    // if (dist < v_thickness + epsilon) {
-    //   float inCurve = 1. - smoothstep(v_thickness - epsilon, v_thickness + epsilon, dist);
-    //   gl_FragColor = inCurve * vec4(v_color.rgb * v_color.a, v_color.a);
-    // } else {
-    //   discard;
-    // }
+    if (dist < v_thickness + epsilon) {
+      float inCurve = 1. - smoothstep(v_thickness - epsilon, v_thickness + epsilon, dist);
+      fragColor = inCurve * vec4(v_color.rgb * v_color.a, v_color.a);
+    } else {
+      fragColor = transparent;
+    }
 
 
-    dist = length(v_normal) * v_thickness;
+    // dist = length(v_normal) * v_thickness;
 
-    float t = smoothstep(
-      v_thickness - feather,
-      v_thickness,
-      dist
-    );
+    // float t = smoothstep(
+    //   v_thickness - feather,
+    //   v_thickness,
+    //   dist
+    // );
 
-    fragColor = mix(v_color, transparent, t);
+    // fragColor = mix(v_color, transparent, t);
   }
 `;
 
@@ -163,6 +180,7 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
   matrixLocation: WebGLUniformLocation;
   sqrtZoomRatioLocation: WebGLUniformLocation;
   correctionRatioLocation: WebGLUniformLocation;
+  dimensionsLocation: WebGLUniformLocation;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
@@ -190,6 +208,10 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     const sqrtZoomRatioLocation = gl.getUniformLocation(this.program, "u_sqrtZoomRatio");
     if (sqrtZoomRatioLocation === null) throw new Error("EdgeProgram: error while getting sqrtZoomRatioLocation");
     this.sqrtZoomRatioLocation = sqrtZoomRatioLocation;
+
+    const dimensionsLocation = gl.getUniformLocation(this.program, "u_dimensions");
+    if (dimensionsLocation === null) throw new Error("EdgeProgram: error while getting dimensionsLocation");
+    this.dimensionsLocation = dimensionsLocation;
 
     // Enabling the OES_element_index_uint extension
     // NOTE: on older GPUs, this means that really large graphs won't
@@ -348,6 +370,7 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
     gl.uniform1f(this.sqrtZoomRatioLocation, Math.sqrt(params.ratio));
     gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
+    gl.uniform2f(this.dimensionsLocation, params.width * params.scalingRatio, params.height * params.scalingRatio);
 
     // Drawing:
     gl.drawElements(gl.TRIANGLES, this.indicesArray.length, this.indicesType, 0);
