@@ -36,7 +36,7 @@ const vertexShaderSource = `#version 300 es
 
   const float minThickness = 1.7;
   const float bias = 255.0 / 254.0;
-  const float curveness = 0.3;
+  const float curveness = 1.5;
 
   vec2 clipspaceToViewport(vec2 pos, vec2 dimensions) {
     return vec2(
@@ -79,7 +79,7 @@ const vertexShaderSource = `#version 300 es
     vec2 targetPosition = (u_matrix * vec3(a_target, 1)).xy;
 
     v_cpA = sourcePosition;
-    v_cpB = 0.5 * (sourcePosition + targetPosition) + abs(unitNormal) * adaptedWebGLThickness * curveness;
+    v_cpB = ((u_matrix * vec3((0.5 * (a_source + a_target)) + abs(unitNormal) * adaptedWebGLThickness * curveness, 1)).xy );
     v_cpC = targetPosition;
 
     v_cpA = clipspaceToViewport(v_cpA, u_dimensions);
