@@ -62,7 +62,7 @@ const vertexShaderSource = `
     vec2 targetPosition = (u_matrix * vec3(a_target, 1)).xy;
 
     v_cpA = sourcePosition;
-    v_cpB = (u_matrix * vec3(0.5 * (a_source + a_target) + unitNormal * adaptedWebGLThickness * curveness, 1)).xy;
+    v_cpB = (u_matrix * vec3(0.5 * (a_source + a_target) + abs(unitNormal) * adaptedWebGLThickness * curveness, 1)).xy;
     v_cpC = targetPosition;
 
     // For the fragment shader though, we need a thickness that takes the "magic"
