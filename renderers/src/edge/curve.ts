@@ -23,7 +23,7 @@ const vertexShaderSource = `#version 300 es
 
   uniform mat3 u_matrix;
   uniform float u_sqrtZoomRatio;
-  uniform float u_correctionRatio;
+  // uniform float u_correctionRatio;
   uniform vec2 u_dimensions;
 
   out vec4 v_color;
@@ -40,59 +40,84 @@ const vertexShaderSource = `#version 300 es
 
   vec2 clipspaceToViewport(vec2 pos, vec2 dimensions) {
     return vec2(
-      (pos.x + 1.0) * (dimensions[0] / 2.0),
-      (pos.y + 1.0) * (dimensions[1] / 2.0)
+      ((1.0 + pos.x) * dimensions.x) / 2.0,
+      ((1.0 - pos.y) * dimensions.y) / 2.0
+    );
+  }
+
+  vec2 viewportToClipspace(vec2 pos, vec2 dimensions) {
+    return vec2(
+      (pos.x / dimensions.x) * 2.0 - 1.0,
+      1.0 - (pos.y / dimensions.y) * 2.0
     );
   }
 
   void main() {
-    // vec2 delta = a_target - a_source;
-    // float len = length(delta);
-    // float width = 2.0 * curveness * len;
-    // vec2 normal = vec2(delta.y, -delta.x) * sign(a_normal);
-    // vec2 unitNormal = normalize(normal);
-    // float normalLength = length(normal);
+    vec2 position = (u_matrix * vec3(a_position, 1)).xy;
+    vec2 source = (u_matrix * vec3(a_source, 1)).xy;
+    vec2 target = (u_matrix * vec3(a_target, 1)).xy;
 
-    float normalLength = length(a_normal);
-    vec2 unitNormal = a_normal / normalLength;
-    strokeWidth = 5.0;
+    vec2 viewportPosition = clipspaceToViewport(position, u_dimensions);
+    vec2 viewportSource = clipspaceToViewport(source, u_dimensions);
+    vec2 viewportTarget = clipspaceToViewport(target, u_dimensions);
 
-    // We require edges to be at least "minThickness" pixels thick *on screen*
-    // (so we need to compensate the SQRT zoom ratio):
-    float pixelsThickness = max(normalLength, minThickness * u_sqrtZoomRatio);
+    vec2 delta = viewportTarget.xy - viewportSource.xy;
+    float len = length(delta);
+    float thickness = 50.0 / u_sqrtZoomRatio;
+    vec2 normal = vec2(-delta.y, delta.x) * sign(a_normal) / len;
 
-    // Then, we need to retrieve the normalized thickness of the edge in the WebGL
-    // referential (in a ([0, 1], [0, 1]) space), using our "magic" correction
-    // ratio:
-    float webGLThickness = pixelsThickness * u_correctionRatio;
+    viewportPosition += normal * thickness / 2.0;
+    position = viewportToClipspace(viewportPosition, u_dimensions);
 
-    // Finally, we adapt the edge thickness to the "SQRT rule" in sigma (so that
-    // items are not too big when zoomed in, and not too small when zoomed out).
-    // The exact computation should be "adapted = value * zoom / sqrt(zoom)", but
-    // it's simpler like this:
-    float adaptedWebGLThickness = webGLThickness * u_sqrtZoomRatio;
+    gl_Position = vec4(position, 0, 1);
 
-    // Here is the proper position of the vertex
-    gl_Position = vec4((u_matrix * vec3(a_position + unitNormal * adaptedWebGLThickness, 1)).xy, 0, 1);
+    // // vec2 delta = a_target - a_source;
+    // // float len = length(delta);
+    // // float width = 2.0 * curveness * len;
+    // // vec2 normal = vec2(delta.y, -delta.x) * sign(a_normal);
+    // // vec2 unitNormal = normalize(normal);
+    // // float normalLength = length(normal);
 
-    vec2 sourcePosition = (u_matrix * vec3(a_source, 1)).xy;
-    vec2 targetPosition = (u_matrix * vec3(a_target, 1)).xy;
+    // float normalLength = length(a_normal);
+    // vec2 unitNormal = a_normal / normalLength;
+    // strokeWidth = 5.0;
 
-    v_cpA = sourcePosition;
-    v_cpB = ((u_matrix * vec3((0.5 * (a_source + a_target)) + abs(unitNormal) * adaptedWebGLThickness * curveness, 1)).xy );
-    v_cpC = targetPosition;
+    // // We require edges to be at least "minThickness" pixels thick *on screen*
+    // // (so we need to compensate the SQRT zoom ratio):
+    // float pixelsThickness = max(normalLength, minThickness * u_sqrtZoomRatio);
 
-    v_cpA = clipspaceToViewport(v_cpA, u_dimensions);
-    v_cpB = clipspaceToViewport(v_cpB, u_dimensions);
-    v_cpC = clipspaceToViewport(v_cpC, u_dimensions);
+    // // Then, we need to retrieve the normalized thickness of the edge in the WebGL
+    // // referential (in a ([0, 1], [0, 1]) space), using our "magic" correction
+    // // ratio:
+    // float webGLThickness = pixelsThickness * u_correctionRatio;
 
-    // For the fragment shader though, we need a thickness that takes the "magic"
-    // correction ratio into account (as in webGLThickness), but so that the
-    // antialiasing effect does not depend on the zoom level. So here's yet
-    // another thickness version:
-    v_thickness = webGLThickness / u_sqrtZoomRatio;
+    // // Finally, we adapt the edge thickness to the "SQRT rule" in sigma (so that
+    // // items are not too big when zoomed in, and not too small when zoomed out).
+    // // The exact computation should be "adapted = value * zoom / sqrt(zoom)", but
+    // // it's simpler like this:
+    // float adaptedWebGLThickness = webGLThickness * u_sqrtZoomRatio;
 
-    v_normal = unitNormal;
+    // // Here is the proper position of the vertex
+    // gl_Position = vec4((u_matrix * vec3(a_position + unitNormal * adaptedWebGLThickness, 1)).xy, 0, 1);
+
+    // vec2 sourcePosition = (u_matrix * vec3(a_source, 1)).xy;
+    // vec2 targetPosition = (u_matrix * vec3(a_target, 1)).xy;
+
+    // v_cpA = sourcePosition;
+    // v_cpB = ((u_matrix * vec3((0.5 * (a_source + a_target)) + abs(unitNormal) * adaptedWebGLThickness * curveness, 1)).xy );
+    // v_cpC = targetPosition;
+
+    // v_cpA = clipspaceToViewport(v_cpA, u_dimensions);
+    // v_cpB = clipspaceToViewport(v_cpB, u_dimensions);
+    // v_cpC = clipspaceToViewport(v_cpC, u_dimensions);
+
+    // // For the fragment shader though, we need a thickness that takes the "magic"
+    // // correction ratio into account (as in webGLThickness), but so that the
+    // // antialiasing effect does not depend on the zoom level. So here's yet
+    // // another thickness version:
+    // v_thickness = webGLThickness / u_sqrtZoomRatio;
+
+    // v_normal = unitNormal;
     v_color = a_color;
     v_color.a *= bias;
   }
@@ -136,20 +161,22 @@ const fragmentShaderSource = `#version 300 es
   }
 
   void main(void) {
-    float dist = distToQuadraticBezierCurve(gl_FragCoord.xy, v_cpA, v_cpB, v_cpC);
+    fragColor = v_color;
 
-    float epsilon = 0.05;
+    // float dist = distToQuadraticBezierCurve(gl_FragCoord.xy, v_cpA, v_cpB, v_cpC);
+
+    // float epsilon = 0.05;
 
     // gl_FragColor = mix(v_color, transparent, dist);
     // fragColor = vec4(dist, dist, dist, 1.0);
     // return;
 
-    if (dist < strokeWidth + epsilon) {
-      float inCurve = 1.0 - smoothstep(strokeWidth - epsilon, strokeWidth + epsilon, dist);
-      fragColor = inCurve * vec4(v_color.rgb * v_color.a, v_color.a);
-    } else {
-      fragColor = transparent;
-    }
+    // if (dist < strokeWidth + epsilon) {
+    //   float inCurve = 1.0 - smoothstep(strokeWidth - epsilon, strokeWidth + epsilon, dist);
+    //   fragColor = inCurve * vec4(v_color.rgb * v_color.a, v_color.a);
+    // } else {
+    //   fragColor = transparent;
+    // }
 
 
     // dist = length(v_normal) * v_thickness;
@@ -177,7 +204,7 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
   targetLocation: GLint;
   matrixLocation: WebGLUniformLocation;
   sqrtZoomRatioLocation: WebGLUniformLocation;
-  correctionRatioLocation: WebGLUniformLocation;
+  // correctionRatioLocation: WebGLUniformLocation;
   dimensionsLocation: WebGLUniformLocation;
 
   constructor(gl: WebGLRenderingContext) {
@@ -199,9 +226,9 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     if (matrixLocation === null) throw new Error("EdgeProgram: error while getting matrixLocation");
     this.matrixLocation = matrixLocation;
 
-    const correctionRatioLocation = gl.getUniformLocation(this.program, "u_correctionRatio");
-    if (correctionRatioLocation === null) throw new Error("EdgeProgram: error while getting correctionRatioLocation");
-    this.correctionRatioLocation = correctionRatioLocation;
+    // const correctionRatioLocation = gl.getUniformLocation(this.program, "u_correctionRatio");
+    // if (correctionRatioLocation === null) throw new Error("EdgeProgram: error while getting correctionRatioLocation");
+    // this.correctionRatioLocation = correctionRatioLocation;
 
     const sqrtZoomRatioLocation = gl.getUniformLocation(this.program, "u_sqrtZoomRatio");
     if (sqrtZoomRatioLocation === null) throw new Error("EdgeProgram: error while getting sqrtZoomRatioLocation");
@@ -286,27 +313,26 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
       return;
     }
 
-    const thickness = 100,
-      x1 = sourceData.x,
+    const x1 = sourceData.x,
       y1 = sourceData.y,
       x2 = targetData.x,
       y2 = targetData.y,
       color = floatColor(data.color);
 
     // Computing normals
-    const dx = x2 - x1,
-      dy = y2 - y1;
+    // const dx = x2 - x1,
+    //   dy = y2 - y1;
 
-    let len = dx * dx + dy * dy,
-      n1 = 0,
-      n2 = 0;
+    // let len = dx * dx + dy * dy,
+    //   n1 = 0,
+    //   n2 = 0;
 
-    if (len) {
-      len = 1 / Math.sqrt(len);
+    // if (len) {
+    //   len = 1 / Math.sqrt(len);
 
-      n1 = -dy * len * thickness;
-      n2 = dx * len * thickness;
-    }
+    //   n1 = -dy * len * thickness;
+    //   n2 = dx * len * thickness;
+    // }
 
     let i = POINTS * ATTRIBUTES * offset;
 
@@ -315,8 +341,8 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     // First point
     array[i++] = x1;
     array[i++] = y1;
-    array[i++] = n1;
-    array[i++] = n2;
+    array[i++] = 1;
+    array[i++] = 1;
     array[i++] = x1;
     array[i++] = y1;
     array[i++] = x2;
@@ -326,8 +352,8 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     // First point flipped
     array[i++] = x1;
     array[i++] = y1;
-    array[i++] = -n1;
-    array[i++] = -n2;
+    array[i++] = -1;
+    array[i++] = -1;
     array[i++] = x1;
     array[i++] = y1;
     array[i++] = x2;
@@ -337,8 +363,8 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     // Second point
     array[i++] = x2;
     array[i++] = y2;
-    array[i++] = n1;
-    array[i++] = n2;
+    array[i++] = 1;
+    array[i++] = 1;
     array[i++] = x1;
     array[i++] = y1;
     array[i++] = x2;
@@ -348,8 +374,8 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     // Second point flipped
     array[i++] = x2;
     array[i++] = y2;
-    array[i++] = -n1;
-    array[i++] = -n2;
+    array[i++] = -1;
+    array[i++] = -1;
     array[i++] = x1;
     array[i++] = y1;
     array[i++] = x2;
@@ -367,7 +393,7 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
 
     gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
     gl.uniform1f(this.sqrtZoomRatioLocation, Math.sqrt(params.ratio));
-    gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
+    // gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
     gl.uniform2f(this.dimensionsLocation, params.width * params.scalingRatio, params.height * params.scalingRatio);
 
     // Drawing:

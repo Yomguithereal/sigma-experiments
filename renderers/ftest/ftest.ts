@@ -21,6 +21,8 @@ import EdgeCurveProgram from "../src/edge/curve";
 // cropToLargestConnectedComponent(graph);
 const graph = new UndirectedGraph();
 graph.mergeEdge(0, 1);
+graph.mergeEdge(1, 2);
+graph.mergeEdge(2, 0);
 
 randomLayout.assign(graph);
 forceAtlas2.assign(graph, { iterations: 100, settings: forceAtlas2.inferSettings(graph) });
