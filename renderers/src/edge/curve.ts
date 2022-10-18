@@ -29,9 +29,9 @@ const vertexShaderSource = `#version 300 es
   out vec4 v_color;
   out vec2 v_normal;
   out float v_thickness;
-  flat out vec2 v_cpA;
-  flat out vec2 v_cpB;
-  flat out vec2 v_cpC;
+  out vec2 v_cpA;
+  out vec2 v_cpB;
+  out vec2 v_cpC;
   out float strokeWidth;
 
   const float minThickness = 1.7;
@@ -79,67 +79,21 @@ const vertexShaderSource = `#version 300 es
 
     vec2 delta = viewportTarget.xy - viewportSource.xy;
     float len = length(delta);
-    float thickness = curveness * len / u_sqrtZoomRatio;
-    vec2 normal = vec2(-delta.y, delta.x) * sign(a_normal) / len;
+    vec2 normal = vec2(-delta.y, delta.x) * -sign(a_normal);
+    vec2 unitNormal = normal / len;
+    float thickness = len * curveness;
 
-    viewportPosition += normal * thickness / 2.0;
+    viewportPosition += unitNormal * thickness / 2.0;
     position = viewportToClipspace(viewportPosition, u_dimensions);
 
-    strokeWidth = 5.0;
+    strokeWidth = 5.0 / u_sqrtZoomRatio;
 
     gl_Position = vec4(position, 0, 1);
 
     v_cpA = viewportSource;
-    v_cpB = (0.5 * (viewportSource + viewportTarget) + normal * thickness / 2.0);
+    v_cpB = ((0.5 * (viewportSource + viewportTarget)) + abs(unitNormal) * thickness / 2.0);
     v_cpC = viewportTarget;
 
-    // // vec2 delta = a_target - a_source;
-    // // float len = length(delta);
-    // // float width = 2.0 * curveness * len;
-    // // vec2 normal = vec2(delta.y, -delta.x) * sign(a_normal);
-    // // vec2 unitNormal = normalize(normal);
-    // // float normalLength = length(normal);
-
-    // float normalLength = length(a_normal);
-    // vec2 unitNormal = a_normal / normalLength;
-    // strokeWidth = 5.0;
-
-    // // We require edges to be at least "minThickness" pixels thick *on screen*
-    // // (so we need to compensate the SQRT zoom ratio):
-    // float pixelsThickness = max(normalLength, minThickness * u_sqrtZoomRatio);
-
-    // // Then, we need to retrieve the normalized thickness of the edge in the WebGL
-    // // referential (in a ([0, 1], [0, 1]) space), using our "magic" correction
-    // // ratio:
-    // float webGLThickness = pixelsThickness * u_correctionRatio;
-
-    // // Finally, we adapt the edge thickness to the "SQRT rule" in sigma (so that
-    // // items are not too big when zoomed in, and not too small when zoomed out).
-    // // The exact computation should be "adapted = value * zoom / sqrt(zoom)", but
-    // // it's simpler like this:
-    // float adaptedWebGLThickness = webGLThickness * u_sqrtZoomRatio;
-
-    // // Here is the proper position of the vertex
-    // gl_Position = vec4((u_matrix * vec3(a_position + unitNormal * adaptedWebGLThickness, 1)).xy, 0, 1);
-
-    // vec2 sourcePosition = (u_matrix * vec3(a_source, 1)).xy;
-    // vec2 targetPosition = (u_matrix * vec3(a_target, 1)).xy;
-
-    // v_cpA = sourcePosition;
-    // v_cpB = ((u_matrix * vec3((0.5 * (a_source + a_target)) + abs(unitNormal) * adaptedWebGLThickness * curveness, 1)).xy );
-    // v_cpC = targetPosition;
-
-    // v_cpA = clipspaceToViewport(v_cpA, u_dimensions);
-    // v_cpB = clipspaceToViewport(v_cpB, u_dimensions);
-    // v_cpC = clipspaceToViewport(v_cpC, u_dimensions);
-
-    // // For the fragment shader though, we need a thickness that takes the "magic"
-    // // correction ratio into account (as in webGLThickness), but so that the
-    // // antialiasing effect does not depend on the zoom level. So here's yet
-    // // another thickness version:
-    // v_thickness = webGLThickness / u_sqrtZoomRatio;
-
-    // v_normal = unitNormal;
     v_color = a_color;
     v_color.a *= bias;
   }
@@ -151,14 +105,14 @@ const fragmentShaderSource = `#version 300 es
   in float strokeWidth;
   in vec4 v_color;
   in vec2 v_normal;
-  flat in vec2 v_cpA;
-  flat in vec2 v_cpB;
-  flat in vec2 v_cpC;
+  in vec2 v_cpA;
+  in vec2 v_cpB;
+  in vec2 v_cpC;
   in float v_thickness;
   out vec4 fragColor;
 
   const float feather = 0.001;
-  const vec4 transparent = vec4(0.0, 0.0, 0.0, 1.0);
+  const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.5);
   const float epsilon = 0.001;
 
   float det(vec2 a, vec2 b) {
