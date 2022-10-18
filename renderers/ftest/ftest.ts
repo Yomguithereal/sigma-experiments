@@ -17,17 +17,17 @@ import createNodeUniformHaloProgram from "../src/node/uniform-halo";
 import createNodeBipartiteProgram from "../src/node/bipartite";
 import EdgeCurveProgram from "../src/edge/curve";
 
-// const graph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
-// cropToLargestConnectedComponent(graph);
-const graph = new UndirectedGraph();
-graph.addNode(0, { label: "0", x: 0, y: 1 });
-graph.addNode(1, { label: "1", x: 1, y: 1 });
-graph.addNode(2, { label: "2", x: 0, y: 0 });
-graph.addNode(3, { label: "2", x: 1, y: 0 });
-graph.mergeEdge(0, 1, { color: "blue" });
-graph.mergeEdge(1, 2, { color: "blue" });
-graph.mergeEdge(2, 3, { color: "blue" });
-graph.mergeEdge(3, 0, { color: "blue" });
+const graph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
+cropToLargestConnectedComponent(graph);
+// const graph = new UndirectedGraph();
+// graph.addNode(0, { label: "0", x: 0, y: 1 });
+// graph.addNode(1, { label: "1", x: 1, y: 1 });
+// graph.addNode(2, { label: "2", x: 0, y: 0 });
+// graph.addNode(3, { label: "2", x: 1, y: 0 });
+// graph.mergeEdge(0, 1, { color: "blue" });
+// graph.mergeEdge(1, 2, { color: "blue" });
+// graph.mergeEdge(2, 3, { color: "blue" });
+// graph.mergeEdge(3, 0, { color: "blue" });
 
 randomLayout.assign(graph);
 forceAtlas2.assign(graph, { iterations: 100, settings: forceAtlas2.inferSettings(graph) });
