@@ -83,9 +83,10 @@ const vertexShaderSource = `#version 300 es
     vec2 unitNormal = normalize(normal);
     float thickness = len * curveness;
 
-    strokeWidth = 1.0 / u_sqrtZoomRatio;
+    strokeWidth = 10.0 / u_sqrtZoomRatio;
 
-    // if (sign(a_normal.x) > 1.0)
+    // TODO: can be implemented without branching
+    if (sign(a_normal.x) < 1.0)
     viewportPosition += unitNormal * (thickness / 2.0 + strokeWidth);
     position = viewportToClipspace(viewportPosition, u_dimensions);
 
