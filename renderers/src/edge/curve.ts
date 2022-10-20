@@ -36,7 +36,7 @@ const vertexShaderSource = `#version 300 es
 
   const float minThickness = 1.7;
   const float bias = 255.0 / 254.0;
-  const float curveness = 0.5;
+  const float curveness = 0.3;
 
   // Sigma's internal ones
   // vec2 clipspaceToViewport(vec2 pos, vec2 dimensions) {
@@ -83,10 +83,11 @@ const vertexShaderSource = `#version 300 es
     vec2 unitNormal = normalize(normal);
     float thickness = len * curveness;
 
-    viewportPosition += unitNormal * thickness / 2.0;
-    position = viewportToClipspace(viewportPosition, u_dimensions);
-
     strokeWidth = 1.0 / u_sqrtZoomRatio;
+
+    // if (sign(a_normal.x) > 1.0)
+    viewportPosition += unitNormal * (thickness / 2.0 + strokeWidth);
+    position = viewportToClipspace(viewportPosition, u_dimensions);
 
     gl_Position = vec4(position, 0, 1);
 

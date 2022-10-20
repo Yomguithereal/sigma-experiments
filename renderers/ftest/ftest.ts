@@ -31,8 +31,8 @@ graph.mergeEdge(3, 0, { color: "blue" });
 graph.mergeEdge(0, 2, { color: "blue" });
 graph.mergeEdge(1, 3, { color: "blue" });
 
-randomLayout.assign(graph);
-forceAtlas2.assign(graph, { iterations: 100, settings: forceAtlas2.inferSettings(graph) });
+// randomLayout.assign(graph);
+// forceAtlas2.assign(graph, { iterations: 100, settings: forceAtlas2.inferSettings(graph) });
 
 graph.updateEachNodeAttributes((node, attr) => {
   const size = Math.random() * 15;
