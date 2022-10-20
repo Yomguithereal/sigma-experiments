@@ -242,6 +242,8 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     // Bindings
     gl.enableVertexAttribArray(this.positionLocation);
     gl.enableVertexAttribArray(this.normalLocation);
+    gl.enableVertexAttribArray(this.sourceLocation);
+    gl.enableVertexAttribArray(this.targetLocation);
     gl.enableVertexAttribArray(this.colorLocation);
 
     gl.vertexAttribPointer(this.positionLocation, 2, gl.FLOAT, false, ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT, 0);
