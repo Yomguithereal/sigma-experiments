@@ -79,7 +79,7 @@ const vertexShaderSource = `#version 300 es
 
     vec2 delta = viewportTarget.xy - viewportSource.xy;
     float len = length(delta);
-    vec2 normal = vec2(-delta.y, delta.x) * -sign(a_normal);
+    vec2 normal = vec2(-delta.y, delta.x) * -sign(a_normal.x);
     vec2 unitNormal = normalize(normal);
     float thickness = len * curveness;
 
@@ -95,7 +95,7 @@ const vertexShaderSource = `#version 300 es
     v_cpB = 0.5 * (viewportSource + viewportTarget);
     v_cpC = viewportTarget;
 
-    v_cpB += abs(unitNormal) * thickness;
+    v_cpB += unitNormal * -sign(a_normal.x) * thickness;
 
     v_color = a_color;
     v_color.a *= u_correctionRatio;
