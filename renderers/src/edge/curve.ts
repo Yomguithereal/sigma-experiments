@@ -23,7 +23,7 @@ const vertexShaderSource = `#version 300 es
 
   uniform mat3 u_matrix;
   uniform float u_sqrtZoomRatio;
-  // uniform float u_correctionRatio;
+  uniform float u_correctionRatio;
   uniform vec2 u_dimensions;
 
   out vec4 v_color;
@@ -98,6 +98,8 @@ const vertexShaderSource = `#version 300 es
     v_cpB += abs(unitNormal) * thickness;
 
     v_color = a_color;
+    v_color.a *= u_correctionRatio;
+    v_color.a /= u_correctionRatio;
     v_color.a *= bias;
   }
 `;
@@ -184,7 +186,7 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
   targetLocation: GLint;
   matrixLocation: WebGLUniformLocation;
   sqrtZoomRatioLocation: WebGLUniformLocation;
-  // correctionRatioLocation: WebGLUniformLocation;
+  correctionRatioLocation: WebGLUniformLocation;
   dimensionsLocation: WebGLUniformLocation;
 
   constructor(gl: WebGLRenderingContext) {
@@ -206,9 +208,9 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
     if (matrixLocation === null) throw new Error("EdgeProgram: error while getting matrixLocation");
     this.matrixLocation = matrixLocation;
 
-    // const correctionRatioLocation = gl.getUniformLocation(this.program, "u_correctionRatio");
-    // if (correctionRatioLocation === null) throw new Error("EdgeProgram: error while getting correctionRatioLocation");
-    // this.correctionRatioLocation = correctionRatioLocation;
+    const correctionRatioLocation = gl.getUniformLocation(this.program, "u_correctionRatio");
+    if (correctionRatioLocation === null) throw new Error("EdgeProgram: error while getting correctionRatioLocation");
+    this.correctionRatioLocation = correctionRatioLocation;
 
     const sqrtZoomRatioLocation = gl.getUniformLocation(this.program, "u_sqrtZoomRatio");
     if (sqrtZoomRatioLocation === null) throw new Error("EdgeProgram: error while getting sqrtZoomRatioLocation");
@@ -373,7 +375,7 @@ export default class EdgeCurveProgram extends AbstractEdgeProgram {
 
     gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
     gl.uniform1f(this.sqrtZoomRatioLocation, Math.sqrt(params.ratio));
-    // gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
+    gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
     gl.uniform2f(this.dimensionsLocation, params.width * params.scalingRatio, params.height * params.scalingRatio);
 
     // Drawing:
