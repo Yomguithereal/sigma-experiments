@@ -36,7 +36,7 @@ const vertexShaderSource = `#version 300 es
 
   const float minThickness = 1.7;
   const float bias = 255.0 / 254.0;
-  const float curveness = 1.0 + 0.5;
+  const float curveness = 0.5;
 
   // Sigma's internal ones
   // vec2 clipspaceToViewport(vec2 pos, vec2 dimensions) {
@@ -80,8 +80,8 @@ const vertexShaderSource = `#version 300 es
     vec2 delta = viewportTarget.xy - viewportSource.xy;
     float len = length(delta);
     vec2 normal = vec2(-delta.y, delta.x) * -sign(a_normal);
-    vec2 unitNormal = normal / len;
-    float thickness = 50.0 / u_sqrtZoomRatio;
+    vec2 unitNormal = normalize(normal);
+    float thickness = len * curveness;
 
     viewportPosition += unitNormal * thickness / 2.0;
     position = viewportToClipspace(viewportPosition, u_dimensions);
@@ -91,8 +91,10 @@ const vertexShaderSource = `#version 300 es
     gl_Position = vec4(position, 0, 1);
 
     v_cpA = viewportSource;
-    v_cpB = ((0.5 * (viewportSource + viewportTarget)) + abs(unitNormal) * thickness * curveness / 2.0);
+    v_cpB = 0.5 * (viewportSource + viewportTarget);
     v_cpC = viewportTarget;
+
+    v_cpB += abs(unitNormal) * thickness;
 
     v_color = a_color;
     v_color.a *= bias;
@@ -112,7 +114,7 @@ const fragmentShaderSource = `#version 300 es
   out vec4 fragColor;
 
   const float feather = 0.001;
-  const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
+  const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.1);
   const float epsilon = 0.001;
 
   float det(vec2 a, vec2 b) {
@@ -138,10 +140,11 @@ const fragmentShaderSource = `#version 300 es
 
   void main(void) {
     fragColor = v_color;
+    // return;
 
     float dist = distToQuadraticBezierCurve(gl_FragCoord.xy, v_cpA, v_cpB, v_cpC);
 
-    float epsilon = 0.05;
+    float epsilon = 0.5;
 
     // gl_FragColor = mix(v_color, transparent, dist);
     // fragColor = vec4(dist, dist, dist, 1.0);
