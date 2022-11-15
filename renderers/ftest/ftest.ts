@@ -5,17 +5,7 @@ import randomLayout from "graphology-layout/random";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 
 import Sigma from "sigma";
-import NodeCircleProgram from "sigma/rendering/webgl/programs/node.fast";
-import EdgeProgram from "sigma/rendering/webgl/programs/edge";
-import { createNodeCompoundProgram } from "sigma/rendering/webgl/programs/common/node";
-
-import createNodeThreeCirclesProgram from "../src/node/three-circles";
-import createNodeUniformBorderProgram from "../src/node/uniform-border";
-import createNodeBorderProgram from "../src/node/border";
-import createNodeHaloProgram from "../src/node/halo";
-import createNodeUniformHaloProgram from "../src/node/uniform-halo";
-import createNodeBipartiteProgram from "../src/node/bipartite";
-import EdgeCurveProgram from "../src/edge/curve";
+import { NodePointWithBorderProgram } from "../src";
 
 // const graph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
 // cropToLargestConnectedComponent(graph);
@@ -65,19 +55,9 @@ declare global {
 
 window.renderer = new Sigma(graph, container, {
   nodeProgramClasses: {
-    circle: NodeCircleProgram,
-    border: createNodeBorderProgram(),
-    uniformBorder: createNodeUniformBorderProgram({ borderRatio: 0.2 }),
-    threeCircles: createNodeThreeCirclesProgram({ dotSizeRatio: 0.3, innerSizeRatio: 0.95 }),
-    halo: createNodeHaloProgram(),
-    heatmap: createNodeCompoundProgram([createNodeHaloProgram(), NodeCircleProgram]),
-    uniformHalo: createNodeUniformHaloProgram({ haloColor: "purple" }),
-    bipartite: createNodeBipartiteProgram(),
+    border: NodePointWithBorderProgram,
   },
-  edgeProgramClasses: {
-    line: EdgeProgram,
-    curve: EdgeCurveProgram,
-  },
-  defaultNodeType: "circle",
-  defaultEdgeType: "curve",
+  edgeProgramClasses: {},
+  defaultNodeType: "border",
+  defaultEdgeType: "line",
 });

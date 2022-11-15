@@ -1,7 +1,1 @@
-export { default as createNodeBipartiteProgram } from "./node/bipartite";
-export { default as createNodeBorderProgram } from "./node/border";
-export { default as createNodeUniformBorderProgram } from "./node/uniform-border";
-export { default as createNodeHaloProgram } from "./node/halo";
-export { default as createNodeUniformHaloProgram } from "./node/uniform-halo";
-export { default as createNodeThreeCirclesProgram } from "./node/three-circles";
-export { default as EdgeCurveProgram } from "./edge/curve";
+export { default as NodePointWithBorderProgram } from "./node/node.point.border";

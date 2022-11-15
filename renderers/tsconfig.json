@@ -6,5 +6,6 @@
     "esModuleInterop": true,
     "downlevelIteration": true,
     "resolveJsonModule": true
-  }
+  },
+  "exclude": ["./src/edge", "./src/node/node.halo.ts"]
 }
