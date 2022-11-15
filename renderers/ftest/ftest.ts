@@ -7,24 +7,27 @@ import forceAtlas2 from "graphology-layout-forceatlas2";
 import Sigma from "sigma";
 import { NodePointWithBorderProgram } from "../src";
 
-// const graph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
-// cropToLargestConnectedComponent(graph);
-const graph = new UndirectedGraph();
-graph.addNode(0, { label: "0", x: 0, y: 1 });
-graph.addNode(1, { label: "1", x: 2, y: 1 });
-graph.addNode(2, { label: "2", x: 0, y: 0 });
-graph.addNode(3, { label: "3", x: 2, y: 0 });
-graph.mergeEdge(0, 1, { color: "blue" });
-graph.mergeEdge(1, 2, { color: "blue" });
-graph.mergeEdge(2, 3, { color: "blue" });
-graph.mergeEdge(3, 0, { color: "blue" });
-graph.mergeEdge(0, 2, { color: "blue" });
-graph.mergeEdge(1, 3, { color: "blue" });
+const clusteredGraph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
+cropToLargestConnectedComponent(clusteredGraph);
 
-// randomLayout.assign(graph);
-// forceAtlas2.assign(graph, { iterations: 100, settings: forceAtlas2.inferSettings(graph) });
+randomLayout.assign(clusteredGraph);
+forceAtlas2.assign(clusteredGraph, { iterations: 100, settings: forceAtlas2.inferSettings(clusteredGraph) });
 
-graph.updateEachNodeAttributes((node, attr) => {
+const dummyGraph = new UndirectedGraph();
+dummyGraph.addNode(0, { label: "0", x: 0, y: 1 });
+dummyGraph.addNode(1, { label: "1", x: 2, y: 1 });
+dummyGraph.addNode(2, { label: "2", x: 0, y: 0 });
+dummyGraph.addNode(3, { label: "3", x: 2, y: 0 });
+dummyGraph.mergeEdge(0, 1, { color: "blue" });
+dummyGraph.mergeEdge(1, 2, { color: "blue" });
+dummyGraph.mergeEdge(2, 3, { color: "blue" });
+dummyGraph.mergeEdge(3, 0, { color: "blue" });
+dummyGraph.mergeEdge(0, 2, { color: "blue" });
+dummyGraph.mergeEdge(1, 3, { color: "blue" });
+
+const shownGraph = clusteredGraph;
+
+shownGraph.updateEachNodeAttributes((node, attr) => {
   const size = Math.random() * 15;
 
   return {
@@ -37,11 +40,12 @@ graph.updateEachNodeAttributes((node, attr) => {
     dotColor: "black",
     haloIntensity: Math.random(),
     borderColor: Math.random() > 0.5 ? "green" : "yellow",
+    borderRatio: Math.random(),
     triangle: Math.random() > 0.5,
   };
 });
 
-graph.updateEachEdgeAttributes((edge, attr) => {
+shownGraph.updateEachEdgeAttributes((edge, attr) => {
   return { ...attr, size: 0.5 };
 });
 
@@ -53,7 +57,7 @@ declare global {
   }
 }
 
-window.renderer = new Sigma(graph, container, {
+window.renderer = new Sigma(shownGraph, container, {
   nodeProgramClasses: {
     border: NodePointWithBorderProgram,
   },

@@ -1,5 +1,5 @@
 // Original author: @jacomyal
-// A node renderer using one point to render a circle with a variable size
+// A node renderer using one point to render a circle with a variable ratio
 // border and a variable color.
 import type { NodeDisplayData } from "sigma/types";
 import NodePointProgram from "sigma/rendering/webgl/programs/node.point";
@@ -49,7 +49,7 @@ void main() {
   v_borderColor = a_borderColor;
   v_borderColor.a *= bias;
 
-  v_borderRatio = a_borderRatio;
+  v_borderRatio = 0.5 - a_borderRatio / 2.0;
 }
 `;
 
