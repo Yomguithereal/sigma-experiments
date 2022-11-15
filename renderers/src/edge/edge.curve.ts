@@ -18,8 +18,9 @@ const VERTEX_SHADER_SOURCE = /*glsl*/ `
 attribute vec4 a_color;
 attribute float a_direction;
 attribute float a_thickness;
+attribute vec2 a_source;
+attribute vec2 a_target;
 attribute vec2 a_position;
-attribute vec2 a_opposite;
 attribute float a_curveness;
 
 uniform mat3 u_matrix;
@@ -28,6 +29,9 @@ uniform vec2 u_dimensions;
 
 varying vec4 v_color;
 varying float v_thickness;
+// varying vec2 v_cpA;
+// varying vec2 v_cpB;
+// varying vec2 v_cpC;
 
 const float bias = 255.0 / 254.0;
 
@@ -47,12 +51,14 @@ vec2 viewportToClipspace(vec2 pos, vec2 dimensions) {
 
 void main() {
   vec2 position = (u_matrix * vec3(a_position, 1)).xy;
-  vec2 opposite = (u_matrix * vec3(a_opposite, 1)).xy;
+  vec2 source = (u_matrix * vec3(a_source, 1)).xy;
+  vec2 target = (u_matrix * vec3(a_target, 1)).xy;
 
   vec2 viewportPosition = clipspaceToViewport(position, u_dimensions);
-  vec2 viewportOpposite = clipspaceToViewport(opposite, u_dimensions);
+  vec2 viewportSource = clipspaceToViewport(source, u_dimensions);
+  vec2 viewportTarget = clipspaceToViewport(target, u_dimensions);
 
-  vec2 delta = viewportOpposite.xy - viewportPosition.xy;
+  vec2 delta = viewportTarget.xy - viewportSource.xy;
   float len = length(delta);
   vec2 normal = vec2(-delta.y, delta.x) * a_direction;
   vec2 unitNormal = normal / len;
@@ -76,6 +82,30 @@ precision mediump float;
 
 varying vec4 v_color;
 varying float v_thickness;
+// varying vec2 v_cpA;
+// varying vec2 v_cpB;
+// varying vec2 v_cpC;
+
+float det(vec2 a, vec2 b) {
+  return a.x * b.y - b.x * a.y;
+}
+
+vec2 get_distance_vector(vec2 b0, vec2 b1, vec2 b2) {
+  float a = det(b0, b2), b = 2.0 * det(b1, b0), d = 2.0 * det(b2, b1);
+  float f = b * d - a * a;
+  vec2 d21 = b2 - b1, d10 = b1 - b0, d20 = b2 - b0;
+  vec2 gf = 2.0 * (b * d21 + d * d10 + a * d20);
+  gf = vec2(gf.y, -gf.x);
+  vec2 pp = -f * gf / dot(gf, gf);
+  vec2 d0p = b0 - pp;
+  float ap = det(d0p, d20), bp = 2.0 * det(d10, d0p);
+  float t = clamp((ap + bp) / (2.0 * a + b + d), 0.0, 1.0);
+  return mix(mix(b0, b1, t), mix(b1, b2, t), t);
+}
+
+float distToQuadraticBezierCurve(vec2 p, vec2 b0, vec2 b1, vec2 b2) {
+  return length(get_distance_vector(b0 - p, b1 - p, b2 - p));
+}
 
 const float feather = 0.7;
 const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
@@ -104,13 +134,14 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
   getDefinition() {
     return {
       VERTICES: 4,
-      ARRAY_ITEMS_PER_VERTEX: 8,
+      ARRAY_ITEMS_PER_VERTEX: 10,
       VERTEX_SHADER_SOURCE,
       FRAGMENT_SHADER_SOURCE,
       UNIFORMS,
       ATTRIBUTES: [
-        { name: "a_position", size: 2, type: FLOAT },
-        { name: "a_opposite", size: 2, type: FLOAT },
+        { name: "a_source", size: 2, type: FLOAT },
+        { name: "a_target", size: 2, type: FLOAT },
+        { name: "a_position", size: 2, type: FLOAT }, // TODO: I am sure we can only pass 2 points
         { name: "a_color", size: 4, type: UNSIGNED_BYTE, normalized: true },
         { name: "a_direction", size: 1, type: FLOAT }, // TODO: can be a byte or a bool
         { name: "a_thickness", size: 1, type: FLOAT },
@@ -157,6 +188,8 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
     array[i++] = y1;
     array[i++] = x2;
     array[i++] = y2;
+    array[i++] = x1;
+    array[i++] = y1;
     array[i++] = color;
     array[i++] = 1;
     array[i++] = thickness;
@@ -167,28 +200,34 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
     array[i++] = y1;
     array[i++] = x2;
     array[i++] = y2;
+    array[i++] = x1;
+    array[i++] = y1;
     array[i++] = color;
     array[i++] = -1;
     array[i++] = thickness;
     array[i++] = curveness;
 
     // Second point
-    array[i++] = x2;
-    array[i++] = y2;
     array[i++] = x1;
     array[i++] = y1;
+    array[i++] = x2;
+    array[i++] = y2;
+    array[i++] = x2;
+    array[i++] = y2;
     array[i++] = color;
-    array[i++] = -1;
+    array[i++] = 1;
     array[i++] = thickness;
     array[i++] = curveness;
 
     // Second point flipped
-    array[i++] = x2;
-    array[i++] = y2;
     array[i++] = x1;
     array[i++] = y1;
+    array[i++] = x2;
+    array[i++] = y2;
+    array[i++] = x2;
+    array[i++] = y2;
     array[i++] = color;
-    array[i++] = 1;
+    array[i++] = -1;
     array[i++] = thickness;
     array[i++] = curveness;
   }
