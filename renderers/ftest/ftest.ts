@@ -7,7 +7,7 @@ import forceAtlas2 from "graphology-layout-forceatlas2";
 import Sigma from "sigma";
 import NodePointProgram from "sigma/rendering/webgl/programs/node.point";
 import { createNodeCompoundProgram } from "sigma/rendering/webgl/programs/common/node";
-import { NodePointWithBorderProgram, NodeHaloProgram } from "../src";
+import { NodePointWithBorderProgram, NodeHaloProgram, EdgeCurveProgram } from "../src";
 
 const clusteredGraph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
 cropToLargestConnectedComponent(clusteredGraph);
@@ -27,7 +27,7 @@ dummyGraph.mergeEdge(3, 0, { color: "blue" });
 dummyGraph.mergeEdge(0, 2, { color: "blue" });
 dummyGraph.mergeEdge(1, 3, { color: "blue" });
 
-const shownGraph = clusteredGraph;
+const shownGraph = dummyGraph;
 
 shownGraph.updateEachNodeAttributes((node, attr) => {
   const size = Math.random() * 15;
@@ -67,7 +67,7 @@ window.renderer = new Sigma(shownGraph, container, {
   nodeHoverProgramClasses: {
     halo: NodePointProgram,
   },
-  edgeProgramClasses: {},
-  defaultNodeType: "halo",
-  defaultEdgeType: "line",
+  edgeProgramClasses: { curve: EdgeCurveProgram },
+  defaultNodeType: "circle",
+  defaultEdgeType: "curve",
 });
