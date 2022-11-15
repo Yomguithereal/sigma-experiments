@@ -72,3 +72,10 @@ window.renderer = new Sigma(shownGraph, container, {
   defaultNodeType: "circle",
   defaultEdgeType: "curve",
 });
+
+// const rotate = () => {
+//   window.renderer.getCamera().updateState((state) => ({ angle: state.angle + 0.05 }));
+//   requestAnimationFrame(rotate);
+// };
+
+// rotate();
