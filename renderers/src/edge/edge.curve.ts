@@ -20,7 +20,7 @@ attribute float a_direction;
 attribute float a_thickness;
 attribute vec2 a_source;
 attribute vec2 a_target;
-attribute vec2 a_position;
+attribute float a_current;
 attribute float a_curveness;
 
 uniform mat3 u_matrix;
@@ -52,7 +52,12 @@ vec2 viewportToClipspace(vec2 pos, vec2 dimensions) {
 }
 
 void main() {
-  vec2 position = (u_matrix * vec3(a_position, 1)).xy;
+
+  // Selecting the correct position
+  // Branchless "position = a_source if a_current == 1.0 else a_target"
+  vec2 position = a_source * max(0.0, a_current) + a_target * max(0.0, 1.0 - a_current);
+  position = (u_matrix * vec3(position, 1)).xy;
+
   vec2 source = (u_matrix * vec3(a_source, 1)).xy;
   vec2 target = (u_matrix * vec3(a_target, 1)).xy;
 
@@ -142,14 +147,14 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
   getDefinition() {
     return {
       VERTICES: 4,
-      ARRAY_ITEMS_PER_VERTEX: 10,
+      ARRAY_ITEMS_PER_VERTEX: 9,
       VERTEX_SHADER_SOURCE,
       FRAGMENT_SHADER_SOURCE,
       UNIFORMS,
       ATTRIBUTES: [
         { name: "a_source", size: 2, type: FLOAT },
         { name: "a_target", size: 2, type: FLOAT },
-        { name: "a_position", size: 2, type: FLOAT }, // TODO: I am sure we can only pass 2 points
+        { name: "a_current", size: 1, type: FLOAT }, // TODO: can be a byte or a bool
         { name: "a_color", size: 4, type: UNSIGNED_BYTE, normalized: true },
         { name: "a_direction", size: 1, type: FLOAT }, // TODO: can be a byte or a bool
         { name: "a_thickness", size: 1, type: FLOAT },
@@ -196,8 +201,7 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
     array[i++] = y1;
     array[i++] = x2;
     array[i++] = y2;
-    array[i++] = x1;
-    array[i++] = y1;
+    array[i++] = 0;
     array[i++] = color;
     array[i++] = 1;
     array[i++] = thickness;
@@ -208,8 +212,7 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
     array[i++] = y1;
     array[i++] = x2;
     array[i++] = y2;
-    array[i++] = x1;
-    array[i++] = y1;
+    array[i++] = 0;
     array[i++] = color;
     array[i++] = -1;
     array[i++] = thickness;
@@ -220,8 +223,7 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
     array[i++] = y1;
     array[i++] = x2;
     array[i++] = y2;
-    array[i++] = x2;
-    array[i++] = y2;
+    array[i++] = 1;
     array[i++] = color;
     array[i++] = 1;
     array[i++] = thickness;
@@ -232,8 +234,7 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
     array[i++] = y1;
     array[i++] = x2;
     array[i++] = y2;
-    array[i++] = x2;
-    array[i++] = y2;
+    array[i++] = 1;
     array[i++] = color;
     array[i++] = -1;
     array[i++] = thickness;

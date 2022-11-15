@@ -28,7 +28,7 @@ dummyGraph.mergeEdge(3, 0, { color: "blue" });
 dummyGraph.mergeEdge(0, 2, { color: "blue" });
 dummyGraph.mergeEdge(1, 3, { color: "blue" });
 
-const shownGraph = dummyGraph;
+const shownGraph = clusteredGraph;
 
 shownGraph.updateEachNodeAttributes((node, attr) => {
   const size = Math.random() * 15;
@@ -74,7 +74,7 @@ window.renderer = new Sigma(shownGraph, container, {
 });
 
 // const rotate = () => {
-//   window.renderer.getCamera().updateState((state) => ({ angle: state.angle + 0.05 }));
+//   window.renderer.getCamera().updateState((state) => ({ angle: state.angle + 0.025 }));
 //   requestAnimationFrame(rotate);
 // };
 
