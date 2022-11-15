@@ -5,7 +5,9 @@ import randomLayout from "graphology-layout/random";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 
 import Sigma from "sigma";
-import { NodePointWithBorderProgram } from "../src";
+import NodePointProgram from "sigma/rendering/webgl/programs/node.point";
+import { createNodeCompoundProgram } from "sigma/rendering/webgl/programs/common/node";
+import { NodePointWithBorderProgram, NodeHaloProgram } from "../src";
 
 const clusteredGraph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
 cropToLargestConnectedComponent(clusteredGraph);
@@ -60,8 +62,12 @@ declare global {
 window.renderer = new Sigma(shownGraph, container, {
   nodeProgramClasses: {
     border: NodePointWithBorderProgram,
+    halo: createNodeCompoundProgram([NodeHaloProgram, NodePointProgram]),
+  },
+  nodeHoverProgramClasses: {
+    halo: NodePointProgram,
   },
   edgeProgramClasses: {},
-  defaultNodeType: "border",
+  defaultNodeType: "halo",
   defaultEdgeType: "line",
 });

@@ -1,236 +1,151 @@
 // A node renderer using one triangle to render a blurry halo useful to render
-// a basic heatmap with variable color.
-
-import { NodeDisplayData } from "sigma/types";
+// a basic heatmap with variable color, size and intensity
+// NOTE: the ignoreZoom uniform is not in use but could be accessed through
+// a factory.
+import type { NodeDisplayData } from "sigma/types";
+import type { RenderParams } from "sigma/rendering/webgl/programs/common/program";
+import { NodeProgram } from "sigma/rendering/webgl/programs/common/node";
 import { floatColor } from "sigma/utils";
-import { AbstractProgram, RenderParams } from "sigma/rendering/webgl/programs/common/program";
-import { NodeProgramConstructor } from "sigma/rendering/webgl/programs/common/node";
 
-const POINTS = 3;
-const ATTRIBUTES = 6;
+interface NodeDisplayDataWithHalo extends NodeDisplayData {
+  haloColor?: string;
+  haloIntensity?: number;
+  haloSize?: number;
+}
+
+const VERTEX_SHADER_SOURCE = /*glsl*/ `
+attribute vec2 a_position;
+attribute float a_size;
+attribute float a_angle;
+attribute vec4 a_color;
+attribute float a_intensity;
+
+uniform mat3 u_matrix;
+uniform float u_sizeRatio;
+uniform float u_correctionRatio;
+uniform float u_ignoreZoom;
+
+varying vec4 v_color;
+varying vec2 v_diffVector;
+varying float v_radius;
+varying float v_border;
+varying float v_intensity;
+
+const float bias = 255.0 / 254.0;
+const float marginRatio = 1.05;
+
+void main() {
+  float size = a_size * u_correctionRatio / u_sizeRatio * u_ignoreZoom * 4.0;
+  vec2 diffVector = size * vec2(cos(a_angle), sin(a_angle));
+  vec2 position = a_position + diffVector * marginRatio;
+  gl_Position = vec4(
+    (u_matrix * vec3(position, 1)).xy,
+    0,
+    1
+  );
+
+  v_border = u_correctionRatio;
+  v_diffVector = diffVector;
+  v_radius = size / 2.0 / marginRatio;
+
+  v_color = a_color;
+  v_color.a *= bias;
+
+  v_intensity = a_intensity;
+}
+`;
+
+const FRAGMENT_SHADER_SOURCE = /*glsl*/ `
+precision mediump float;
+
+varying vec4 v_color;
+varying vec2 v_diffVector;
+varying float v_radius;
+varying float v_border;
+varying float v_intensity;
+
+const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
+
+void main(void) {
+  float dist = length(v_diffVector);
+  float intensity = v_intensity * (1.0 - dist);
+
+  if (dist < v_radius) {
+    gl_FragColor = mix(v_color, transparent, pow(dist / v_radius, intensity));
+  }
+  else {
+    gl_FragColor = transparent;
+  }
+}
+`;
 
 const ANGLE_1 = 0;
 const ANGLE_2 = (2 * Math.PI) / 3;
 const ANGLE_3 = (4 * Math.PI) / 3;
 
-export type NodeHaloProgramOptions = {
-  ignoreZoom?: boolean;
-  haloColorAttributeName?: string;
-  haloSizeAttributeName?: string;
-  haloIntensityAttributeName?: string;
-};
+const UNIFORMS = ["u_sizeRatio", "u_correctionRatio", "u_matrix", "u_ignoreZoom"] as const;
 
-// NOTE: color could become a uniform in performance scenarios
-export default function createNodeHaloProgram(options?: NodeHaloProgramOptions): NodeProgramConstructor {
-  options = options || {};
+const { FLOAT, UNSIGNED_BYTE } = WebGLRenderingContext;
 
-  const {
-    ignoreZoom = false,
-    haloColorAttributeName = "haloColor",
-    haloSizeAttributeName = "haloSize",
-    haloIntensityAttributeName = "haloIntensity",
-  } = options;
+export default class NodeHaloProgram extends NodeProgram<typeof UNIFORMS[number]> {
+  getDefinition() {
+    return {
+      VERTICES: 3,
+      ARRAY_ITEMS_PER_VERTEX: 6,
+      VERTEX_SHADER_SOURCE,
+      FRAGMENT_SHADER_SOURCE,
+      UNIFORMS,
+      ATTRIBUTES: [
+        { name: "a_position", size: 2, type: FLOAT },
+        { name: "a_size", size: 1, type: FLOAT },
+        { name: "a_color", size: 4, type: UNSIGNED_BYTE, normalized: true },
+        { name: "a_angle", size: 1, type: FLOAT },
+        { name: "a_intensity", size: 1, type: FLOAT },
+      ],
+    };
+  }
 
-  const vertexShaderSource = `
-    attribute vec2 a_position;
-    attribute float a_size;
-    attribute float a_angle;
-    attribute vec4 a_color;
-    attribute float a_intensity;
+  processVisibleItem(i: number, data: NodeDisplayDataWithHalo) {
+    const array = this.array;
 
-    uniform mat3 u_matrix;
-    uniform float u_sqrtZoomRatio;
-    uniform float u_correctionRatio;
+    const color = floatColor(data.haloColor || data.color);
+    const intensity = typeof data.haloIntensity === "number" ? data.haloIntensity : 1;
+    const size = Math.max(typeof data.haloSize === "number" ? data.haloSize : 0, data.size);
 
-    varying vec4 v_color;
-    varying vec2 v_diffVector;
-    varying float v_radius;
-    varying float v_intensity;
+    array[i++] = data.x;
+    array[i++] = data.y;
+    array[i++] = size;
+    array[i++] = color;
+    array[i++] = ANGLE_1;
+    array[i++] = intensity;
 
-    const float bias = 255.0 / 254.0;
-    const float marginRatio = 1.05;
+    array[i++] = data.x;
+    array[i++] = data.y;
+    array[i++] = size;
+    array[i++] = color;
+    array[i++] = ANGLE_2;
+    array[i++] = intensity;
 
-    void main() {
-      float size = a_size * u_correctionRatio * u_sqrtZoomRatio${ignoreZoom ? " / u_sqrtZoomRatio" : ""} * 4.0;
-      vec2 diffVector = size * vec2(cos(a_angle), sin(a_angle));
-      vec2 position = a_position + diffVector * marginRatio;
-      gl_Position = vec4(
-        (u_matrix * vec3(position, 1)).xy,
-        0,
-        1
-      );
+    array[i++] = data.x;
+    array[i++] = data.y;
+    array[i++] = size;
+    array[i++] = color;
+    array[i++] = ANGLE_3;
+    array[i++] = intensity;
+  }
 
-      v_diffVector = diffVector;
-      v_radius = size / 2.0 / marginRatio;
+  draw(params: RenderParams): void {
+    const gl = this.gl;
 
-      v_color = a_color;
-      v_color.a *= bias;
+    const { u_sizeRatio, u_correctionRatio, u_matrix, u_ignoreZoom } = this.uniformLocations;
 
-      v_intensity = a_intensity;
-    }
-  `;
+    gl.uniform1f(u_ignoreZoom, 1);
+    // NOTE: uncomment next line to disable zoom impact.
+    // gl.uniform1f(u_ignoreZoom, 1 / params.sizeRatio);
+    gl.uniform1f(u_sizeRatio, params.sizeRatio);
+    gl.uniform1f(u_correctionRatio, params.correctionRatio);
+    gl.uniformMatrix3fv(u_matrix, false, params.matrix);
 
-  const fragmentShaderSource = `
-    precision mediump float;
-
-    varying vec4 v_color;
-    varying vec2 v_diffVector;
-    varying float v_radius;
-    varying float v_intensity;
-
-    const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
-
-    void main(void) {
-      float dist = length(v_diffVector);
-      float intensity = v_intensity * (1.0 - dist);
-
-      if (dist < v_radius) {
-        gl_FragColor = mix(v_color, transparent, pow(dist / v_radius, intensity));
-      }
-      else {
-        gl_FragColor = transparent;
-      }
-    }
-  `;
-
-  return class NodeHaloProgram extends AbstractProgram {
-    positionLocation: GLint;
-    sizeLocation: GLint;
-    colorLocation: GLint;
-    angleLocation: GLint;
-    intensityLocation: GLint;
-
-    matrixLocation: WebGLUniformLocation;
-    sqrtZoomRatioLocation: WebGLUniformLocation;
-    correctionRatioLocation: WebGLUniformLocation;
-
-    constructor(gl: WebGLRenderingContext) {
-      super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
-
-      // Locations
-      this.positionLocation = gl.getAttribLocation(this.program, "a_position");
-      this.sizeLocation = gl.getAttribLocation(this.program, "a_size");
-      this.colorLocation = gl.getAttribLocation(this.program, "a_color");
-      this.angleLocation = gl.getAttribLocation(this.program, "a_angle");
-      this.intensityLocation = gl.getAttribLocation(this.program, "a_intensity");
-
-      // Uniform Location
-      const matrixLocation = gl.getUniformLocation(this.program, "u_matrix");
-      if (matrixLocation === null) throw new Error("AbstractNodeProgram: error while getting matrixLocation");
-      this.matrixLocation = matrixLocation;
-
-      const sqrtZoomRatioLocation = gl.getUniformLocation(this.program, "u_sqrtZoomRatio");
-      if (sqrtZoomRatioLocation === null) throw new Error("NodeProgram: error while getting sqrtZoomRatioLocation");
-      this.sqrtZoomRatioLocation = sqrtZoomRatioLocation;
-
-      const correctionRatioLocation = gl.getUniformLocation(this.program, "u_correctionRatio");
-      if (correctionRatioLocation === null) throw new Error("NodeProgram: error while getting correctionRatioLocation");
-      this.correctionRatioLocation = correctionRatioLocation;
-
-      this.bind();
-    }
-
-    bind(): void {
-      const gl = this.gl;
-
-      gl.enableVertexAttribArray(this.positionLocation);
-      gl.enableVertexAttribArray(this.sizeLocation);
-      gl.enableVertexAttribArray(this.colorLocation);
-      gl.enableVertexAttribArray(this.angleLocation);
-      gl.enableVertexAttribArray(this.intensityLocation);
-
-      gl.vertexAttribPointer(
-        this.positionLocation,
-        2,
-        gl.FLOAT,
-        false,
-        this.attributes * Float32Array.BYTES_PER_ELEMENT,
-        0,
-      );
-      gl.vertexAttribPointer(
-        this.sizeLocation,
-        1,
-        gl.FLOAT,
-        false,
-        this.attributes * Float32Array.BYTES_PER_ELEMENT,
-        8,
-      );
-      gl.vertexAttribPointer(
-        this.colorLocation,
-        4,
-        gl.UNSIGNED_BYTE,
-        true,
-        this.attributes * Float32Array.BYTES_PER_ELEMENT,
-        12,
-      );
-      gl.vertexAttribPointer(
-        this.angleLocation,
-        1,
-        gl.FLOAT,
-        false,
-        this.attributes * Float32Array.BYTES_PER_ELEMENT,
-        16,
-      );
-      gl.vertexAttribPointer(
-        this.intensityLocation,
-        1,
-        gl.FLOAT,
-        false,
-        this.attributes * Float32Array.BYTES_PER_ELEMENT,
-        20,
-      );
-    }
-
-    process(data: NodeDisplayData & { [name: string]: string | number }, hidden: boolean, offset: number): void {
-      const array = this.array;
-      let i = offset * POINTS * ATTRIBUTES;
-
-      if (hidden) {
-        for (let l = i + POINTS * ATTRIBUTES; i < l; i++) array[i] = 0;
-        return;
-      }
-
-      const color = floatColor((data[haloColorAttributeName] || data.color) as string);
-      const intensity = (
-        typeof data[haloIntensityAttributeName] === "number" ? data[haloIntensityAttributeName] : 1.0
-      ) as number;
-      const size = Math.max((data[haloSizeAttributeName] as number) || 0, data.size);
-
-      array[i++] = data.x;
-      array[i++] = data.y;
-      array[i++] = size;
-      array[i++] = color;
-      array[i++] = ANGLE_1;
-      array[i++] = intensity;
-
-      array[i++] = data.x;
-      array[i++] = data.y;
-      array[i++] = size;
-      array[i++] = color;
-      array[i++] = ANGLE_2;
-      array[i++] = intensity;
-
-      array[i++] = data.x;
-      array[i++] = data.y;
-      array[i++] = size;
-      array[i++] = color;
-      array[i++] = ANGLE_3;
-      array[i] = intensity;
-    }
-
-    render(params: RenderParams): void {
-      if (this.hasNothingToRender()) return;
-
-      const gl = this.gl;
-      const program = this.program;
-
-      gl.useProgram(program);
-
-      gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
-      gl.uniform1f(this.sqrtZoomRatioLocation, Math.sqrt(params.ratio));
-      gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
-
-      gl.drawArrays(gl.TRIANGLES, 0, this.array.length / ATTRIBUTES);
-    }
-  };
+    gl.drawArrays(gl.TRIANGLES, 0, this.verticesCount);
+  }
 }
