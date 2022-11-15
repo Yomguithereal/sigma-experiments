@@ -29,11 +29,12 @@ uniform vec2 u_dimensions;
 
 varying vec4 v_color;
 varying float v_thickness;
-// varying vec2 v_cpA;
-// varying vec2 v_cpB;
-// varying vec2 v_cpC;
+varying vec2 v_cpA;
+varying vec2 v_cpB;
+varying vec2 v_cpC;
 
 const float bias = 255.0 / 254.0;
+const float epsilon = 0.5;
 
 vec2 clipspaceToViewport(vec2 pos, vec2 dimensions) {
   return vec2(
@@ -67,7 +68,15 @@ void main() {
 
   v_thickness = curveThickness;
 
-  vec2 viewportOffsetPosition = viewportPosition + unitNormal * (boundingBoxThickness / 2.0 + curveThickness);
+  v_cpA = viewportSource;
+  v_cpB = 0.5 * (viewportSource + viewportTarget) + unitNormal * a_direction * boundingBoxThickness;
+  v_cpC = viewportTarget;
+
+  vec2 viewportOffsetPosition = (
+    viewportPosition +
+    unitNormal * (boundingBoxThickness / 2.0 + curveThickness + epsilon) *
+    max(0.0, a_direction) // NOTE: cutting the bounding box in half to avoid overdraw
+  );
 
   position = viewportToClipspace(viewportOffsetPosition, u_dimensions);
   gl_Position = vec4(position, 0, 1);
@@ -82,9 +91,9 @@ precision mediump float;
 
 varying vec4 v_color;
 varying float v_thickness;
-// varying vec2 v_cpA;
-// varying vec2 v_cpB;
-// varying vec2 v_cpC;
+varying vec2 v_cpA;
+varying vec2 v_cpB;
+varying vec2 v_cpC;
 
 float det(vec2 a, vec2 b) {
   return a.x * b.y - b.x * a.y;
@@ -107,20 +116,18 @@ float distToQuadraticBezierCurve(vec2 p, vec2 b0, vec2 b1, vec2 b2) {
   return length(get_distance_vector(b0 - p, b1 - p, b2 - p));
 }
 
-const float feather = 0.7;
-const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
+const float epsilon = 0.5;
+const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.2);
 
 void main(void) {
-  gl_FragColor = vec4(v_color.rgb, 0.3);
-  // float dist = length(v_normal) * v_thickness;
+  float dist = distToQuadraticBezierCurve(gl_FragCoord.xy, v_cpA, v_cpB, v_cpC);
 
-  // float t = smoothstep(
-  //   v_thickness - feather,
-  //   v_thickness,
-  //   dist
-  // );
-
-  // gl_FragColor = mix(v_color, transparent, t);
+  if (dist < v_thickness + epsilon) {
+    float inCurve = 1.0 - smoothstep(v_thickness - epsilon, v_thickness + epsilon, dist);
+    gl_FragColor = inCurve * vec4(v_color.rgb * v_color.a, v_color.a);
+  } else {
+    gl_FragColor = transparent;
+  }
 }
 `;
 
