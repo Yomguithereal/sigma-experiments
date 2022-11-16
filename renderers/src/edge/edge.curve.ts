@@ -141,7 +141,7 @@ const { UNSIGNED_BYTE, FLOAT } = WebGLRenderingContext;
 
 const UNIFORMS = ["u_matrix", "u_zoomRatio", "u_dimensions"] as const;
 
-const DEFAULT_EDGE_CURVENESS = 0.2;
+const DEFAULT_EDGE_CURVENESS = 0.25;
 
 export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number]> {
   getDefinition() {
