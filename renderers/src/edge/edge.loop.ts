@@ -83,7 +83,7 @@ void main(void) {
   if (distToCenter < v_borderRatio - v_border)
     gl_FragColor = transparent;
   else if (distToCenter < v_borderRatio)
-    gl_FragColor = mix(v_color, v_color, (v_borderRatio - distToCenter) / v_border);
+    gl_FragColor = mix(v_color, transparent, (v_borderRatio - distToCenter) / v_border);
   else if (distToCenter < radius - v_border)
     gl_FragColor = v_color;
   else if (distToCenter < radius)
