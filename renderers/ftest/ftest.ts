@@ -21,7 +21,7 @@ cropToLargestConnectedComponent(clusteredGraph);
 randomLayout.assign(clusteredGraph);
 forceAtlas2.assign(clusteredGraph, { iterations: 100, settings: forceAtlas2.inferSettings(clusteredGraph) });
 
-let ICON = "grade";
+let ICON = "settings_applications";
 ICON = `https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${ICON}/wght100grad200/48px.svg`;
 
 const dummyGraph = new MultiDirectedGraph();
@@ -46,11 +46,11 @@ dummyGraph.addNode(5, {
   pictogramColor: "red",
   borderRatio: 0.1,
   borderColor: "cyan",
-  color: "red",
+  color: "white",
   size: 20,
   x: 0.5,
   y: 0.5,
-  type: "pictogram",
+  type: "pictogramWithCircle",
   image: ICON,
 });
 dummyGraph.addNode(6, {
@@ -65,6 +65,7 @@ dummyGraph.addNode(6, {
   type: "pictogramWithCircle",
   image: ICON,
 });
+dummyGraph.mergeEdge(4, 5, { size: 2, color: "blue" });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop" });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop", offset: 3, angle: Math.PI });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop", offset: 6 });
