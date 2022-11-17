@@ -41,29 +41,31 @@ vec2 viewportToClipspace(vec2 pos, vec2 dimensions) {
 
 const float bias = 255.0 / 254.0;
 const float marginRatio = 1.05;
-const float theta = 0.0;
+const float theta = 0.78;
 const float minBorderRatio = 0.05;
 
 void main() {
+  vec2 viewportPosition = clipspaceToViewport(a_position, u_dimensions);
+
+  float viewportRadius = a_size * u_sizeRatio / a_thickness * a_thickness;
+
+  viewportPosition.x += viewportRadius * cos(theta);
+  viewportPosition.y += viewportRadius * sin(theta);
+
+  vec2 position = viewportToClipspace(viewportPosition, u_dimensions);
+
   float size = a_size * u_correctionRatio / u_sizeRatio * 4.0;
   vec2 diffVector = size * vec2(cos(a_angle), sin(a_angle));
-  vec2 position = a_position + diffVector  * marginRatio;
-
-  float viewportRadius = a_size * u_sizeRatio / (2.0 + marginRatio) - a_thickness * u_sizeRatio;
-
-  vec2 viewportPosition = clipspaceToViewport(position, u_dimensions);
-
-  viewportPosition.x -= viewportRadius;
-  viewportPosition.y += viewportRadius;
+  position += diffVector  * marginRatio;
 
   gl_Position = vec4(
-    (u_matrix * vec3(viewportToClipspace(viewportPosition, u_dimensions), 1)).xy,
+    (u_matrix * vec3(position, 1)).xy,
     0,
     1
   );
 
   v_border = u_correctionRatio;
-  v_borderRatio = 1.0 - max(minBorderRatio, a_thickness / a_size / u_sizeRatio * 1.5);
+  v_borderRatio = 1.0 - 0.2;
   v_diffVector = diffVector;
   v_radius = size / 2.0 / marginRatio;
 
@@ -81,7 +83,7 @@ varying float v_radius;
 varying float v_border;
 varying float v_borderRatio;
 
-const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
+const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.1);
 
 void main(void) {
   float borderRadius = v_borderRatio * v_radius;
