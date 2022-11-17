@@ -7,7 +7,13 @@ import forceAtlas2 from "graphology-layout-forceatlas2";
 import Sigma from "sigma";
 import NodePointProgram from "sigma/rendering/webgl/programs/node.point";
 import { createNodeCompoundProgram } from "sigma/rendering/webgl/programs/common/node";
-import { NodePointWithBorderProgram, NodeHaloProgram, EdgeCurveProgram, EdgeLoopProgram } from "../src";
+import {
+  NodePointWithBorderProgram,
+  NodeHaloProgram,
+  EdgeCurveProgram,
+  EdgeLoopProgram,
+  createNodePictogramProgram,
+} from "../src";
 
 const clusteredGraph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
 cropToLargestConnectedComponent(clusteredGraph);
@@ -20,6 +26,14 @@ dummyGraph.addNode(0, { label: "0", x: 0, y: 1, size: 5 });
 dummyGraph.addNode(1, { label: "1", x: 2, y: 1, size: 5 });
 dummyGraph.addNode(2, { label: "2", x: 0, y: 0, size: 5 });
 dummyGraph.addNode(3, { label: "3", x: 2, y: 0, size: 5 });
+dummyGraph.addNode(4, {
+  label: "4",
+  size: 20,
+  x: 1,
+  y: 0.5,
+  type: "pictogram",
+  image: "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/check_circle/default/48px.svg",
+});
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop" });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop", offset: 3, angle: Math.PI });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop", offset: 6 });
@@ -68,6 +82,7 @@ declare global {
 window.renderer = new Sigma(shownGraph, container, {
   nodeProgramClasses: {
     border: NodePointWithBorderProgram,
+    pictogram: createNodePictogramProgram(),
     halo: createNodeCompoundProgram([NodeHaloProgram, NodePointProgram]),
   },
   nodeHoverProgramClasses: {
