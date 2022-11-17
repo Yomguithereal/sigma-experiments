@@ -42,7 +42,7 @@ vec2 viewportToClipspace(vec2 pos, vec2 dimensions) {
 
 const float bias = 255.0 / 254.0;
 const float marginRatio = 1.05;
-const float theta = 0.0;
+const float theta = 0.78;
 const float minThickness = 0.5;
 
 void main() {
@@ -60,6 +60,7 @@ void main() {
   float size = a_size * u_correctionRatio / u_sizeRatio * 4.0;
   vec2 diffVector = size * vec2(cos(a_angle), sin(a_angle));
   position += diffVector * marginRatio;
+  position = a_position + diffVector * marginRatio + vec2(size / 2.0, size / 2.0) * vec2(cos(theta), sin(theta)); // NOTE: magic happens here
 
   gl_Position = vec4(
     (u_matrix * vec3(position, 1)).xy,
