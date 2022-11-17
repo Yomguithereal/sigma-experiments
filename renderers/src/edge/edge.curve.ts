@@ -24,7 +24,7 @@ attribute float a_current;
 attribute float a_curveness;
 
 uniform mat3 u_matrix;
-uniform float u_zoomRatio;
+uniform float u_sizeRatio;
 uniform vec2 u_dimensions;
 
 varying vec4 v_color;
@@ -70,7 +70,7 @@ void main() {
   vec2 normal = vec2(-delta.y, delta.x) * a_direction;
   vec2 unitNormal = normal / len;
   float boundingBoxThickness = len * a_curveness;
-  float curveThickness = max(minThickness, a_thickness / u_zoomRatio);
+  float curveThickness = max(minThickness, a_thickness / 2.0 / u_sizeRatio);
 
   v_thickness = curveThickness;
 
@@ -139,7 +139,7 @@ void main(void) {
 
 const { UNSIGNED_BYTE, FLOAT } = WebGLRenderingContext;
 
-const UNIFORMS = ["u_matrix", "u_zoomRatio", "u_dimensions"] as const;
+const UNIFORMS = ["u_matrix", "u_sizeRatio", "u_dimensions"] as const;
 
 const DEFAULT_EDGE_CURVENESS = 0.25;
 
@@ -244,10 +244,10 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
   draw(params: RenderParams): void {
     const gl = this.gl;
 
-    const { u_matrix, u_zoomRatio, u_dimensions } = this.uniformLocations;
+    const { u_matrix, u_sizeRatio, u_dimensions } = this.uniformLocations;
 
     gl.uniformMatrix3fv(u_matrix, false, params.matrix);
-    gl.uniform1f(u_zoomRatio, params.zoomRatio);
+    gl.uniform1f(u_sizeRatio, params.sizeRatio);
     gl.uniform2f(u_dimensions, params.width * params.pixelRatio, params.height * params.pixelRatio);
 
     if (!this.indicesArray) throw new Error("EdgeCurveProgram: indicesArray should be allocated when drawing!");
