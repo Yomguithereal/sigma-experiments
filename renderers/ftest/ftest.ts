@@ -21,6 +21,9 @@ cropToLargestConnectedComponent(clusteredGraph);
 randomLayout.assign(clusteredGraph);
 forceAtlas2.assign(clusteredGraph, { iterations: 100, settings: forceAtlas2.inferSettings(clusteredGraph) });
 
+let ICON = "grade";
+ICON = `https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${ICON}/wght100grad200/48px.svg`;
+
 const dummyGraph = new MultiDirectedGraph();
 dummyGraph.addNode(0, { label: "0", x: 0, y: 1, size: 5 });
 dummyGraph.addNode(1, { label: "1", x: 2, y: 1, size: 5 });
@@ -30,13 +33,37 @@ dummyGraph.addNode(4, {
   label: "4",
   pictogramColor: "black",
   borderRatio: 0.1,
-  borderColor: "black",
+  borderColor: "cyan",
   color: "red",
   size: 20,
   x: 1,
   y: 0.5,
   type: "pictogramWithBorder",
-  image: "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/check/default/48px.svg",
+  image: ICON,
+});
+dummyGraph.addNode(5, {
+  label: "5",
+  pictogramColor: "red",
+  borderRatio: 0.1,
+  borderColor: "cyan",
+  color: "red",
+  size: 20,
+  x: 0.5,
+  y: 0.5,
+  type: "pictogram",
+  image: ICON,
+});
+dummyGraph.addNode(6, {
+  label: "6",
+  pictogramColor: "yellow",
+  borderRatio: 0.1,
+  borderColor: "cyan",
+  color: "red",
+  size: 20,
+  x: 1.5,
+  y: 0.5,
+  type: "pictogramWithCircle",
+  image: ICON,
 });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop" });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop", offset: 3, angle: Math.PI });
@@ -89,6 +116,7 @@ window.renderer = new Sigma(shownGraph, container, {
   nodeProgramClasses: {
     border: NodePointWithBorderProgram,
     pictogram: NodePictogramProgram,
+    pictogramWithCircle: createNodeCompoundProgram([NodePointProgram, NodePictogramProgram]),
     pictogramWithBorder: createNodeCompoundProgram([NodePointWithBorderProgram, NodePictogramProgram]),
     halo: createNodeCompoundProgram([NodeHaloProgram, NodePointProgram]),
   },
