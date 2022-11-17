@@ -5,13 +5,15 @@ import { floatColor } from "sigma/utils";
 
 interface EdgeDisplayDataWithLoopInformation extends EdgeDisplayData {
   offset?: number;
+  angle?: number;
 }
 
 const VERTEX_SHADER_SOURCE = /*glsl*/ `
 attribute vec2 a_position;
 attribute float a_size;
 attribute float a_thickness;
-attribute float a_angle;
+attribute float a_triangleVertexangle;
+attribute float a_loopAngle;
 attribute vec4 a_color;
 
 uniform mat3 u_matrix;
@@ -26,16 +28,15 @@ varying float v_borderRatio;
 
 const float bias = 255.0 / 254.0;
 const float marginRatio = 1.05;
-const float theta = 0.78;
 const float minThickness = 0.5;
 
 void main() {
   float size = a_size * u_correctionRatio / u_sizeRatio * 4.0;
-  vec2 diffVector = size * vec2(cos(a_angle), sin(a_angle));
+  vec2 diffVector = size * vec2(cos(a_triangleVertexangle), sin(a_triangleVertexangle));
   vec2 position = (
     a_position +
     diffVector * marginRatio +
-    vec2(size / 2.0, size / 2.0) * vec2(cos(theta), sin(theta))
+    vec2(size / 2.0, size / 2.0) * vec2(cos(a_loopAngle), sin(a_loopAngle))
   );
 
   gl_Position = vec4(
@@ -102,10 +103,12 @@ const UNIFORMS = ["u_sizeRatio", "u_correctionRatio", "u_matrix"] as const;
 const { FLOAT, UNSIGNED_BYTE } = WebGLRenderingContext;
 
 export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]> {
+  static UPPER_LEFT_ANGLE = (3 * Math.PI) / 4;
+
   getDefinition() {
     return {
       VERTICES: 3,
-      ARRAY_ITEMS_PER_VERTEX: 6,
+      ARRAY_ITEMS_PER_VERTEX: 7,
       VERTEX_SHADER_SOURCE,
       FRAGMENT_SHADER_SOURCE,
       UNIFORMS,
@@ -114,7 +117,8 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
         { name: "a_size", size: 1, type: FLOAT },
         { name: "a_thickness", size: 1, type: FLOAT },
         { name: "a_color", size: 4, type: UNSIGNED_BYTE, normalized: true },
-        { name: "a_angle", size: 1, type: FLOAT },
+        { name: "a_triangleVertexangle", size: 1, type: FLOAT },
+        { name: "a_loopAngle", size: 1, type: FLOAT },
       ],
     };
   }
@@ -130,8 +134,9 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
     const color = floatColor(data.color);
     const offset = typeof data.offset === "number" ? data.offset : 0;
     const loopSize = sourceData.size + offset;
+    const loopAngle = typeof data.angle === "number" ? data.angle : EdgeLoopProgram.UPPER_LEFT_ANGLE;
 
-    // TODO: angle, edge thickness must not be over loop size
+    // TODO: edge thickness should not overcome source size - 1 else it is basically ugly
 
     array[i++] = sourceData.x;
     array[i++] = sourceData.y;
@@ -139,6 +144,7 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
     array[i++] = data.size;
     array[i++] = color;
     array[i++] = ANGLE_1;
+    array[i++] = loopAngle;
 
     array[i++] = sourceData.x;
     array[i++] = sourceData.y;
@@ -146,6 +152,7 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
     array[i++] = data.size;
     array[i++] = color;
     array[i++] = ANGLE_2;
+    array[i++] = loopAngle;
 
     array[i++] = sourceData.x;
     array[i++] = sourceData.y;
@@ -153,6 +160,7 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
     array[i++] = data.size;
     array[i++] = color;
     array[i++] = ANGLE_3;
+    array[i++] = loopAngle;
   }
 
   draw(params: RenderParams): void {
