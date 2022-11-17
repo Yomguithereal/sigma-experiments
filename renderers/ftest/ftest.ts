@@ -28,11 +28,15 @@ dummyGraph.addNode(2, { label: "2", x: 0, y: 0, size: 5 });
 dummyGraph.addNode(3, { label: "3", x: 2, y: 0, size: 5 });
 dummyGraph.addNode(4, {
   label: "4",
+  pictogramColor: "black",
+  borderRatio: 0.1,
+  borderColor: "black",
+  color: "red",
   size: 20,
   x: 1,
   y: 0.5,
-  type: "pictogram",
-  image: "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/check_circle/default/48px.svg",
+  type: "pictogramWithBorder",
+  image: "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/check/default/48px.svg",
 });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop" });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop", offset: 3, angle: Math.PI });
@@ -61,8 +65,8 @@ shownGraph.updateEachNodeAttributes((node, attr) => {
     insideColor: "yellow",
     dotColor: "black",
     haloIntensity: Math.random(),
-    borderColor: Math.random() > 0.5 ? "green" : "yellow",
-    borderRatio: Math.random(),
+    borderColor: attr.borderColor || (Math.random() > 0.5 ? "green" : "yellow"),
+    borderRatio: attr.borderRatio || Math.random(),
     triangle: Math.random() > 0.5,
   };
 });
@@ -79,10 +83,13 @@ declare global {
   }
 }
 
+const NodePictogramProgram = createNodePictogramProgram();
+
 window.renderer = new Sigma(shownGraph, container, {
   nodeProgramClasses: {
     border: NodePointWithBorderProgram,
-    pictogram: createNodePictogramProgram(),
+    pictogram: NodePictogramProgram,
+    pictogramWithBorder: createNodeCompoundProgram([NodePointWithBorderProgram, NodePictogramProgram]),
     halo: createNodeCompoundProgram([NodeHaloProgram, NodePointProgram]),
   },
   nodeHoverProgramClasses: {

@@ -4,6 +4,10 @@ import { NodeProgram, NodeProgramConstructor } from "sigma/rendering/webgl/progr
 import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
 import type Sigma from "sigma";
 
+interface NodeDisplayDataWithPictogramInfo extends NodeDisplayData {
+  pictogramColor?: string;
+}
+
 const VERTEX_SHADER_SOURCE = /*glsl*/ `
 attribute vec2 a_position;
 attribute float a_size;
@@ -60,9 +64,9 @@ void main(void) {
 
   if (v_texture.w > 0.0) {
     vec4 texel = texture2D(u_atlas, v_texture.xy + gl_PointCoord * v_texture.zw, -1.0);
-    color = vec4(mix(v_color, texel, texel.a).rgb, max(texel.a, v_color.a));
+    color = mix(gl_FragColor, vec4(v_color.rgb, texel.a), texel.a);
   } else {
-    color = v_color;
+    color = gl_FragColor;
   }
 
   vec2 m = gl_PointCoord - vec2(0.5, 0.5);
@@ -70,10 +74,8 @@ void main(void) {
 
   if (dist < radius - v_border) {
     gl_FragColor = color;
-  } else if (dist < radius) {
-    gl_FragColor = mix(transparent, color, (radius - dist) / v_border);
   } else {
-    gl_FragColor = transparent;
+    gl_FragColor = gl_FragColor;
   }
 }
 `;
@@ -310,7 +312,7 @@ export default function createNodePictogramProgram(): NodeProgramConstructor {
       if (this.latestRenderParams) this.render(this.latestRenderParams);
     }
 
-    processVisibleItem(i: number, data: NodeDisplayData & { image?: string }): void {
+    processVisibleItem(i: number, data: NodeDisplayDataWithPictogramInfo & { image?: string }): void {
       const array = this.array;
 
       const imageSource = data.image;
@@ -320,7 +322,7 @@ export default function createNodePictogramProgram(): NodeProgramConstructor {
       array[i++] = data.x;
       array[i++] = data.y;
       array[i++] = data.size;
-      array[i++] = floatColor(data.color);
+      array[i++] = floatColor(data.pictogramColor || "black");
 
       // Reference texture:
       if (imageState && imageState.status === "ready") {
