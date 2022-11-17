@@ -15,10 +15,8 @@ attribute float a_angle;
 attribute vec4 a_color;
 
 uniform mat3 u_matrix;
-uniform float u_pixelRatio;
 uniform float u_sizeRatio;
 uniform float u_correctionRatio;
-uniform vec2 u_dimensions;
 
 varying vec4 v_color;
 varying vec2 v_diffVector;
@@ -26,41 +24,19 @@ varying float v_radius;
 varying float v_border;
 varying float v_borderRatio;
 
-vec2 clipspaceToViewport(vec2 pos, vec2 dimensions) {
-  return vec2(
-    (pos.x + 1.0) * dimensions.x / 2.0,
-    (pos.y + 1.0) * dimensions.y / 2.0
-  );
-}
-
-vec2 viewportToClipspace(vec2 pos, vec2 dimensions) {
-  return vec2(
-    pos.x / dimensions.x * 2.0 - 1.0,
-    pos.y / dimensions.y * 2.0 - 1.0
-  );
-}
-
 const float bias = 255.0 / 254.0;
 const float marginRatio = 1.05;
 const float theta = 0.78;
 const float minThickness = 0.5;
 
 void main() {
-  vec2 viewportPosition = clipspaceToViewport(a_position, u_dimensions);
-
-  float viewportRadius = (
-    a_size / 1.5 * u_sizeRatio * u_pixelRatio
-  );
-
-  viewportPosition.x += viewportRadius * cos(theta) * marginRatio;
-  viewportPosition.y += viewportRadius * sin(theta) * marginRatio;
-
-  vec2 position = viewportToClipspace(viewportPosition, u_dimensions);
-
   float size = a_size * u_correctionRatio / u_sizeRatio * 4.0;
   vec2 diffVector = size * vec2(cos(a_angle), sin(a_angle));
-  position += diffVector * marginRatio;
-  position = a_position + diffVector * marginRatio + vec2(size / 2.0, size / 2.0) * vec2(cos(theta), sin(theta)); // NOTE: magic happens here
+  vec2 position = (
+    a_position +
+    diffVector * marginRatio +
+    vec2(size / 2.0, size / 2.0) * vec2(cos(theta), sin(theta))
+  );
 
   gl_Position = vec4(
     (u_matrix * vec3(position, 1)).xy,
@@ -87,7 +63,7 @@ varying float v_radius;
 varying float v_border;
 varying float v_borderRatio;
 
-const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.1);
+const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
 
 void main(void) {
   float borderRadius = v_borderRatio * v_radius;
@@ -121,7 +97,7 @@ const ANGLE_1 = 0;
 const ANGLE_2 = (2 * Math.PI) / 3;
 const ANGLE_3 = (4 * Math.PI) / 3;
 
-const UNIFORMS = ["u_sizeRatio", "u_correctionRatio", "u_matrix", "u_dimensions", "u_pixelRatio"] as const;
+const UNIFORMS = ["u_sizeRatio", "u_correctionRatio", "u_matrix"] as const;
 
 const { FLOAT, UNSIGNED_BYTE } = WebGLRenderingContext;
 
@@ -155,7 +131,7 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
     const offset = typeof data.offset === "number" ? data.offset : 0;
     const loopSize = sourceData.size + offset;
 
-    // TODO: angle, offset, edge thickness must not be over loop size
+    // TODO: angle, edge thickness must not be over loop size
 
     array[i++] = sourceData.x;
     array[i++] = sourceData.y;
@@ -182,13 +158,11 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
   draw(params: RenderParams): void {
     const gl = this.gl;
 
-    const { u_sizeRatio, u_correctionRatio, u_matrix, u_dimensions, u_pixelRatio } = this.uniformLocations;
+    const { u_sizeRatio, u_correctionRatio, u_matrix } = this.uniformLocations;
 
     gl.uniform1f(u_sizeRatio, params.sizeRatio);
-    gl.uniform1f(u_pixelRatio, params.pixelRatio);
     gl.uniform1f(u_correctionRatio, params.correctionRatio);
     gl.uniformMatrix3fv(u_matrix, false, params.matrix);
-    gl.uniform2f(u_dimensions, params.width * params.pixelRatio, params.height * params.pixelRatio);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.verticesCount);
   }
