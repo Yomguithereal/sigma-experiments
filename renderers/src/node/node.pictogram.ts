@@ -198,6 +198,8 @@ export default function createNodePictogramProgram(): NodeProgramConstructor {
         } else {
           dy = (image.height - image.width) / 2;
         }
+
+        // NOTE: it's possible to offset the image here, this is potentially useful for some pictograms
         ctx.drawImage(image, dx, dy, size, size, xOffset, yOffset, imageSizeInTexture, imageSizeInTexture);
 
         // Update image state:
