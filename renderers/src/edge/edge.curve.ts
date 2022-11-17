@@ -1,10 +1,3 @@
-/**
- * Sigma.js WebGL Renderer Curved Edge Program
- * ============================================
- *
- * Program rendering edges as quadratic bezier curves.
- * @module
- */
 import { NodeDisplayData, EdgeDisplayData } from "sigma/types";
 import { floatColor } from "sigma/utils";
 import { EdgeProgram } from "sigma/rendering/webgl/programs/common/edge";

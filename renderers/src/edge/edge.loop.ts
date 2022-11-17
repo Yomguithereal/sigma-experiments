@@ -41,25 +41,25 @@ vec2 viewportToClipspace(vec2 pos, vec2 dimensions) {
 }
 
 const float bias = 255.0 / 254.0;
-const float theta = 0.78;
+const float marginRatio = 1.05;
+const float theta = 0.0;
 const float minThickness = 0.5;
 
 void main() {
   vec2 viewportPosition = clipspaceToViewport(a_position, u_dimensions);
 
   float viewportRadius = (
-    a_size * u_pixelRatio * u_sizeRatio / 2.0 +
-    a_thickness * u_pixelRatio * u_sizeRatio
+    a_size / 1.5 * u_sizeRatio * u_pixelRatio
   );
 
-  viewportPosition.x += viewportRadius * cos(theta);
-  viewportPosition.y += viewportRadius * sin(theta);
+  viewportPosition.x += viewportRadius * cos(theta) * marginRatio;
+  viewportPosition.y += viewportRadius * sin(theta) * marginRatio;
 
   vec2 position = viewportToClipspace(viewportPosition, u_dimensions);
 
   float size = a_size * u_correctionRatio / u_sizeRatio * 4.0;
   vec2 diffVector = size * vec2(cos(a_angle), sin(a_angle));
-  position += diffVector;
+  position += diffVector * marginRatio;
 
   gl_Position = vec4(
     (u_matrix * vec3(position, 1)).xy,
@@ -70,7 +70,7 @@ void main() {
   v_border = u_correctionRatio;
   v_borderRatio = 1.0 - max(minThickness, a_thickness) / a_size;
   v_diffVector = diffVector;
-  v_radius = size / 2.0;
+  v_radius = size / 2.0 / marginRatio;
 
   v_color = a_color;
   v_color.a *= bias;
