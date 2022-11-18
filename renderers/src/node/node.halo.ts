@@ -2,9 +2,9 @@
 // a basic heatmap with variable color, size and intensity
 // NOTE: the ignoreZoom uniform is not in use but could be accessed through
 // a factory.
-import type { NodeDisplayData } from "sigma/types";
-import type { RenderParams } from "sigma/rendering/webgl/programs/common/program";
+import type { NodeDisplayData, RenderParams } from "sigma/types";
 import { NodeProgram } from "sigma/rendering/webgl/programs/common/node";
+import NodeCircleProgram from "sigma/rendering/webgl/programs/node.circle";
 import { floatColor } from "sigma/utils";
 
 interface NodeDisplayDataWithHalo extends NodeDisplayData {
@@ -79,10 +79,6 @@ void main(void) {
 }
 `;
 
-const ANGLE_1 = 0;
-const ANGLE_2 = (2 * Math.PI) / 3;
-const ANGLE_3 = (4 * Math.PI) / 3;
-
 const UNIFORMS = ["u_sizeRatio", "u_correctionRatio", "u_matrix", "u_ignoreZoom"] as const;
 
 const { FLOAT, UNSIGNED_BYTE } = WebGLRenderingContext;
@@ -116,21 +112,21 @@ export default class NodeHaloProgram extends NodeProgram<typeof UNIFORMS[number]
     array[i++] = data.y;
     array[i++] = size;
     array[i++] = color;
-    array[i++] = ANGLE_1;
+    array[i++] = NodeCircleProgram.ANGLE_1;
     array[i++] = intensity;
 
     array[i++] = data.x;
     array[i++] = data.y;
     array[i++] = size;
     array[i++] = color;
-    array[i++] = ANGLE_2;
+    array[i++] = NodeCircleProgram.ANGLE_2;
     array[i++] = intensity;
 
     array[i++] = data.x;
     array[i++] = data.y;
     array[i++] = size;
     array[i++] = color;
-    array[i++] = ANGLE_3;
+    array[i++] = NodeCircleProgram.ANGLE_3;
     array[i++] = intensity;
   }
 

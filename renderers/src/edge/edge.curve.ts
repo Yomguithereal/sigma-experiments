@@ -1,7 +1,6 @@
-import { NodeDisplayData, EdgeDisplayData } from "sigma/types";
+import { NodeDisplayData, EdgeDisplayData, RenderParams } from "sigma/types";
 import { floatColor } from "sigma/utils";
 import { EdgeProgram } from "sigma/rendering/webgl/programs/common/edge";
-import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
 
 interface EdgeDisplayDataWithCurveness extends EdgeDisplayData {
   curveness?: number;
@@ -131,7 +130,7 @@ void main(void) {
 }
 `;
 
-const { UNSIGNED_BYTE, FLOAT } = WebGLRenderingContext;
+const { UNSIGNED_BYTE, FLOAT, BYTE } = WebGLRenderingContext;
 
 const UNIFORMS = ["u_matrix", "u_sizeRatio", "u_dimensions", "u_pixelRatio"] as const;
 
@@ -148,9 +147,9 @@ export default class EdgeCurveProgram extends EdgeProgram<typeof UNIFORMS[number
       ATTRIBUTES: [
         { name: "a_source", size: 2, type: FLOAT },
         { name: "a_target", size: 2, type: FLOAT },
-        { name: "a_current", size: 1, type: FLOAT }, // TODO: can be a byte or a bool
+        { name: "a_current", size: 1, type: FLOAT },
         { name: "a_color", size: 4, type: UNSIGNED_BYTE, normalized: true },
-        { name: "a_direction", size: 1, type: FLOAT }, // TODO: can be a byte or a bool
+        { name: "a_direction", size: 1, type: FLOAT },
         { name: "a_thickness", size: 1, type: FLOAT },
         { name: "a_curveness", size: 1, type: FLOAT },
       ],

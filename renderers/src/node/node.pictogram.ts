@@ -1,7 +1,6 @@
-import { Coordinates, Dimensions, NodeDisplayData } from "sigma/types";
+import { Coordinates, Dimensions, NodeDisplayData, RenderParams } from "sigma/types";
 import { floatColor } from "sigma/utils";
 import { NodeProgram, NodeProgramConstructor } from "sigma/rendering/webgl/programs/common/node";
-import { RenderParams } from "sigma/rendering/webgl/programs/common/program";
 import type Sigma from "sigma";
 
 interface NodeDisplayDataWithPictogramInfo extends NodeDisplayData {

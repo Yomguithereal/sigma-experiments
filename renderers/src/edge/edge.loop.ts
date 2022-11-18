@@ -1,5 +1,5 @@
-import type { NodeDisplayData, EdgeDisplayData } from "sigma/types";
-import type { RenderParams } from "sigma/rendering/webgl/programs/common/program";
+import type { NodeDisplayData, EdgeDisplayData, RenderParams } from "sigma/types";
+import NodeCircleProgram from "sigma/rendering/webgl/programs/node.circle";
 import { EdgeProgram } from "sigma/rendering/webgl/programs/common/edge";
 import { floatColor } from "sigma/utils";
 
@@ -94,10 +94,6 @@ void main(void) {
 
 `;
 
-const ANGLE_1 = 0;
-const ANGLE_2 = (2 * Math.PI) / 3;
-const ANGLE_3 = (4 * Math.PI) / 3;
-
 const UNIFORMS = ["u_sizeRatio", "u_correctionRatio", "u_matrix"] as const;
 
 const { FLOAT, UNSIGNED_BYTE } = WebGLRenderingContext;
@@ -143,7 +139,7 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
     array[i++] = loopSize;
     array[i++] = data.size;
     array[i++] = color;
-    array[i++] = ANGLE_1;
+    array[i++] = NodeCircleProgram.ANGLE_1;
     array[i++] = loopAngle;
 
     array[i++] = sourceData.x;
@@ -151,7 +147,7 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
     array[i++] = loopSize;
     array[i++] = data.size;
     array[i++] = color;
-    array[i++] = ANGLE_2;
+    array[i++] = NodeCircleProgram.ANGLE_2;
     array[i++] = loopAngle;
 
     array[i++] = sourceData.x;
@@ -159,7 +155,7 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
     array[i++] = loopSize;
     array[i++] = data.size;
     array[i++] = color;
-    array[i++] = ANGLE_3;
+    array[i++] = NodeCircleProgram.ANGLE_3;
     array[i++] = loopAngle;
   }
 
