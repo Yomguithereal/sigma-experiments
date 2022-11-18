@@ -33,6 +33,7 @@ dummyGraph.addNode(4, {
   label: "4",
   pictogramColor: "black",
   borderRatio: 0.1,
+  // borderSize: 2,
   borderColor: "cyan",
   color: "red",
   size: 20,

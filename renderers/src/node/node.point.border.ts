@@ -1,6 +1,7 @@
 // Original author: @jacomyal
-// A node renderer using one point to render a circle with a variable ratio
+// A node renderer using one point to render a circle with a variable size
 // border and a variable color.
+// Note that this program is able to take both a size or a ratio.
 import type { NodeDisplayData } from "sigma/types";
 import NodePointProgram from "sigma/rendering/webgl/programs/node.point";
 import { floatColor } from "sigma/utils";
@@ -8,6 +9,7 @@ import { floatColor } from "sigma/utils";
 interface NodeDisplayDataWithBorder extends NodeDisplayData {
   borderColor?: string;
   borderRatio?: number;
+  borderSize?: number;
 }
 
 const VERTEX_SHADER_SOURCE = /*glsl*/ `
@@ -105,11 +107,18 @@ export default class NodePointWithBorderProgram extends NodePointProgram {
   processVisibleItem(i: number, data: NodeDisplayDataWithBorder) {
     const array = this.array;
 
+    let borderRatio = typeof data.borderRatio !== "number" ? DEFAULT_NODE_BORDER_RATIO : data.borderRatio;
+
+    // borderSize takes precedence
+    if (typeof data.borderSize === "number") {
+      borderRatio = data.borderSize / data.size;
+    }
+
     array[i++] = data.x;
     array[i++] = data.y;
     array[i++] = data.size;
     array[i++] = floatColor(data.color);
     array[i++] = floatColor(data.borderColor || DEFAULT_NODE_BORDER_COLOR);
-    array[i] = typeof data.borderRatio !== "number" ? DEFAULT_NODE_BORDER_RATIO : data.borderRatio;
+    array[i] = borderRatio;
   }
 }
