@@ -18,6 +18,18 @@ import {
 const clusteredGraph = clusters(UndirectedGraph, { clusters: 3, order: 100, size: 1000, clusterDensity: 0.8 });
 cropToLargestConnectedComponent(clusteredGraph);
 
+clusteredGraph.updateEachNodeAttributes((node, attr) => {
+  return {
+    ...attr,
+    type: "pictogram",
+    pictogramColor: "red",
+    pictogram:
+      Math.random() > 0.5
+        ? "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/square/fill1/48px.svg"
+        : "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/change_history/fill1/48px.svg",
+  };
+});
+
 randomLayout.assign(clusteredGraph);
 forceAtlas2.assign(clusteredGraph, { iterations: 100, settings: forceAtlas2.inferSettings(clusteredGraph) });
 
@@ -80,7 +92,7 @@ dummyGraph.mergeEdge(3, 0, { color: "blue" });
 dummyGraph.mergeEdge(0, 2, { color: "blue" });
 dummyGraph.mergeEdge(1, 3, { color: "blue" });
 
-const shownGraph = dummyGraph;
+const shownGraph = clusteredGraph;
 
 shownGraph.updateEachNodeAttributes((node, attr) => {
   const size = attr.size || Math.random() * 15;
@@ -96,7 +108,6 @@ shownGraph.updateEachNodeAttributes((node, attr) => {
     haloIntensity: Math.random(),
     borderColor: attr.borderColor || (Math.random() > 0.5 ? "green" : "yellow"),
     borderRatio: attr.borderRatio || Math.random(),
-    triangle: Math.random() > 0.5,
   };
 });
 
@@ -112,7 +123,7 @@ declare global {
   }
 }
 
-const NodePictogramProgram = createNodePictogramProgram({ correctCentering: true, forcedSvgSize: 192 });
+const NodePictogramProgram = createNodePictogramProgram({ correctCentering: true, forcedSvgSize: 96 });
 
 window.renderer = new Sigma(shownGraph, container, {
   nodeProgramClasses: {

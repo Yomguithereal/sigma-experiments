@@ -79,7 +79,7 @@ void main(void) {
 `;
 
 // maximum size of single texture in atlas
-const MAX_TEXTURE_SIZE = 192;
+const MAX_TEXTURE_SIZE = Infinity;
 // maximum width of atlas texture (limited by browser)
 // low setting of 3072 works on phones & tablets
 const MAX_CANVAS_WIDTH = 3072;
@@ -103,6 +103,7 @@ class PictogramCenteringCorrector {
   }
 
   getCorrectionOffset(image: HTMLImageElement, size: number): Coordinates {
+    this.context.clearRect(0, 0, size, size);
     this.context.drawImage(image, 0, 0, size, size);
     const data = this.context.getImageData(0, 0, size, size).data;
 
@@ -321,7 +322,7 @@ export default function createNodePictogramProgram(
 
         if (options?.correctCentering) {
           const correction = corrector.getCorrectionOffset(image, size);
-
+          console.log(image, size, correction);
           dxOffset = correction.x;
           dyOffset = correction.y;
         }
