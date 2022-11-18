@@ -199,8 +199,77 @@ export default function createNodePictogramProgram(): NodeProgramConstructor {
           dy = (image.height - image.width) / 2;
         }
 
+        const testerCanvas = document.createElement("canvas");
+        const testerContext = testerCanvas.getContext("2d") as CanvasRenderingContext2D;
+
+        testerContext.drawImage(image, 0, 0, size, size);
+
+        const data = testerContext.getImageData(0, 0, size, size).data;
+        const alpha = new Uint8ClampedArray(data.length / 4);
+
+        for (let i = 0; i < data.length; i += 4) {
+          alpha[i / 4] = data[i + 3];
+        }
+
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        let sumX = 0;
+        let sumY = 0;
+        let total = 0;
+
+        for (let y = 0; y < size; y++) {
+          for (let x = 0; x < size; x++) {
+            const a = alpha[y * size + x];
+
+            if (a > 0) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+
+            total += a;
+            sumX += a * x;
+            sumY += a * y;
+          }
+        }
+
+        const barycenterX = sumX / total;
+        const barycenterY = sumY / total;
+
+        const centerX = minX + Math.ceil((maxX - minX) / 2);
+        const centerY = minY + Math.ceil((maxY - minY) / 2);
+
+        console.log("barycenters", barycenterX, barycenterY, size / 2);
+        console.log("centers", centerX, centerY, size / 2);
+
+        let dxOffset = barycenterX - size / 2;
+        let dyOffset = barycenterY - size / 2;
+
+        // if (minX > size - maxX) {
+        //   dxOffset = minX - (size - maxX) + 1;
+        // }
+        // if (minY > size - maxY) {
+        //   dyOffset = minY - (size - maxY) + 1;
+        // }
+
+        console.log("offsets", dxOffset, dyOffset);
+
         // NOTE: it's possible to offset the image here, this is potentially useful for some pictograms
-        ctx.drawImage(image, dx, dy, size, size, xOffset, yOffset, imageSizeInTexture, imageSizeInTexture);
+        ctx.drawImage(
+          image,
+          dx + dxOffset,
+          dy + dyOffset,
+          size,
+          size,
+          xOffset,
+          yOffset,
+          imageSizeInTexture,
+          imageSizeInTexture,
+        );
 
         // Update image state:
         images[id] = {
@@ -286,7 +355,7 @@ export default function createNodePictogramProgram(): NodeProgramConstructor {
 
       rebindTextureFns.push(() => {
         if (this && this.rebindTexture) this.rebindTexture();
-        if (renderer && renderer.refresh) renderer.refresh();
+        if (renderer && renderer.scheduleRefresh) renderer.scheduleRefresh();
       });
 
       textureImage = new ImageData(1, 1);

@@ -21,7 +21,7 @@ cropToLargestConnectedComponent(clusteredGraph);
 randomLayout.assign(clusteredGraph);
 forceAtlas2.assign(clusteredGraph, { iterations: 100, settings: forceAtlas2.inferSettings(clusteredGraph) });
 
-let ICON = "settings_applications";
+let ICON = "grade";
 ICON = `https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${ICON}/wght100grad200/48px.svg`;
 
 const dummyGraph = new MultiDirectedGraph();
