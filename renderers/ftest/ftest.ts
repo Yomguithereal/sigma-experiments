@@ -40,7 +40,7 @@ dummyGraph.addNode(4, {
   x: 1,
   y: 0.5,
   type: "pictogramWithBorder",
-  image: ICON,
+  pictogram: ICON,
 });
 dummyGraph.addNode(5, {
   label: "5",
@@ -52,7 +52,7 @@ dummyGraph.addNode(5, {
   x: 0.5,
   y: 0.5,
   type: "pictogramWithCircle",
-  image: ICON,
+  pictogram: ICON,
 });
 dummyGraph.addNode(6, {
   label: "6",
@@ -64,7 +64,7 @@ dummyGraph.addNode(6, {
   x: 1.5,
   y: 0.5,
   type: "pictogramWithCircle",
-  image: ICON,
+  pictogram: ICON,
 });
 dummyGraph.mergeEdge(4, 5, { size: 2, color: "blue" });
 dummyGraph.mergeEdge(0, 0, { color: "black", type: "loop" });
@@ -112,7 +112,7 @@ declare global {
   }
 }
 
-const NodePictogramProgram = createNodePictogramProgram({ correctCentering: true });
+const NodePictogramProgram = createNodePictogramProgram({ correctCentering: true, forcedSvgSize: 192 });
 
 window.renderer = new Sigma(shownGraph, container, {
   nodeProgramClasses: {

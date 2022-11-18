@@ -4,11 +4,14 @@ import { NodeProgram, NodeProgramConstructor } from "sigma/rendering/webgl/progr
 import type Sigma from "sigma";
 
 interface NodeDisplayDataWithPictogramInfo extends NodeDisplayData {
+  pictogram: string;
   pictogramColor?: string;
 }
 
 interface CreateNodePictogramProgramOptions {
   correctCentering?: boolean;
+  // NOTE: only work with svg accessible through CORS and having proper dimensions
+  forcedSvgSize?: number;
 }
 
 const VERTEX_SHADER_SOURCE = /*glsl*/ `
@@ -87,6 +90,9 @@ type ImagePending = { status: "pending"; image: HTMLImageElement };
 type ImageReady = { status: "ready" } & Coordinates & Dimensions;
 type ImageType = ImageLoading | ImageError | ImagePending | ImageReady;
 
+// Helper class able to "correct" the centering of a svg pictogram by
+// finding the "true" visually correct center through the barycenter of the
+// pictogram's alpha layer in x and y dimension.
 class PictogramCenteringCorrector {
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
@@ -169,6 +175,65 @@ export default function createNodePictogramProgram(
    */
   function loadImage(imageSource: string): void {
     if (images[imageSource]) return;
+
+    const forcedSvgSize = options?.forcedSvgSize;
+
+    // If forcing a SVG size (typically to oversample the resulting rasterized
+    // size so that the icon is crispier), we fetch the svg string and we
+    // mangle it to force a certain size and view box.
+    // Of course this cannot work if said SVG cannot be access through CORS.
+    if (forcedSvgSize) {
+      images[imageSource] = { status: "loading" };
+
+      fetch(imageSource)
+        .then((r) => r.text())
+        .then((svgString) => {
+          const svg = new DOMParser().parseFromString(svgString, "image/svg+xml");
+
+          const root = svg.documentElement;
+
+          let originalWidth = root.getAttribute("width");
+          let originalHeight = root.getAttribute("height");
+
+          if (!originalWidth || !originalHeight)
+            throw new Error(
+              "createNodePictogramProgram.loadImage: cannot use `forcedSvgSize` if target svg has no definite dimensions.",
+            );
+
+          root.setAttribute("width", "" + forcedSvgSize);
+          root.setAttribute("height", "" + forcedSvgSize);
+          root.setAttribute("viewBox", `0 0 ${originalWidth} ${originalHeight}`);
+
+          const correctedSvgString = new XMLSerializer().serializeToString(svg);
+
+          const blob = new Blob([correctedSvgString], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+
+          const svgImage = new Image();
+          svgImage.src = url;
+          svgImage.addEventListener(
+            "load",
+            () => {
+              images[imageSource] = {
+                status: "pending",
+                image: svgImage,
+              };
+
+              if (typeof pendingImagesFrameID !== "number") {
+                pendingImagesFrameID = requestAnimationFrame(() => finalizePendingImages());
+              }
+
+              URL.revokeObjectURL(url);
+            },
+            { once: true },
+          );
+        })
+        .catch(() => {
+          images[imageSource] = { status: "error" };
+        });
+
+      return;
+    }
 
     const image = new Image();
     image.addEventListener("load", () => {
@@ -378,10 +443,10 @@ export default function createNodePictogramProgram(
       if (this.latestRenderParams) this.render(this.latestRenderParams);
     }
 
-    processVisibleItem(i: number, data: NodeDisplayDataWithPictogramInfo & { image?: string }): void {
+    processVisibleItem(i: number, data: NodeDisplayDataWithPictogramInfo): void {
       const array = this.array;
 
-      const imageSource = data.image;
+      const imageSource = data.pictogram;
       const imageState = imageSource && images[imageSource];
       if (typeof imageSource === "string" && !imageState) loadImage(imageSource);
 
