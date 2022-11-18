@@ -98,8 +98,8 @@ const UNIFORMS = ["u_sizeRatio", "u_correctionRatio", "u_matrix"] as const;
 
 const { FLOAT, UNSIGNED_BYTE } = WebGLRenderingContext;
 
-export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]> {
-  static UPPER_LEFT_ANGLE = (3 * Math.PI) / 4;
+export default class EdgeCircleLoopProgram extends EdgeProgram<typeof UNIFORMS[number]> {
+  static readonly UPPER_LEFT_ANGLE = (3 * Math.PI) / 4;
 
   getDefinition() {
     return {
@@ -130,7 +130,7 @@ export default class EdgeLoopProgram extends EdgeProgram<typeof UNIFORMS[number]
     const color = floatColor(data.color);
     const offset = typeof data.offset === "number" ? data.offset : 0;
     const loopSize = sourceData.size + offset;
-    const loopAngle = typeof data.angle === "number" ? data.angle : EdgeLoopProgram.UPPER_LEFT_ANGLE;
+    const loopAngle = typeof data.angle === "number" ? data.angle : EdgeCircleLoopProgram.UPPER_LEFT_ANGLE;
 
     // TODO: edge thickness should not overcome source size - 1 else it is basically ugly
 

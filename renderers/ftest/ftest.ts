@@ -11,7 +11,7 @@ import {
   NodePointWithBorderProgram,
   NodeHaloProgram,
   EdgeCurveProgram,
-  EdgeLoopProgram,
+  EdgeCircleLoopProgram,
   createNodePictogramProgram,
 } from "../src";
 
@@ -124,7 +124,7 @@ window.renderer = new Sigma(shownGraph, container, {
   nodeHoverProgramClasses: {
     halo: NodePointProgram,
   },
-  edgeProgramClasses: { curve: EdgeCurveProgram, loop: EdgeLoopProgram },
+  edgeProgramClasses: { curve: EdgeCurveProgram, loop: EdgeCircleLoopProgram },
   defaultNodeType: "circle",
   defaultEdgeType: "curve",
   stagePadding: 50,
