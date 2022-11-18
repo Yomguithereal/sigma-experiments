@@ -7,6 +7,10 @@ interface NodeDisplayDataWithPictogramInfo extends NodeDisplayData {
   pictogramColor?: string;
 }
 
+interface CreateNodePictogramProgramOptions {
+  correctCentering?: boolean;
+}
+
 const VERTEX_SHADER_SOURCE = /*glsl*/ `
 attribute vec2 a_position;
 attribute float a_size;
@@ -83,12 +87,61 @@ type ImagePending = { status: "pending"; image: HTMLImageElement };
 type ImageReady = { status: "ready" } & Coordinates & Dimensions;
 type ImageType = ImageLoading | ImageError | ImagePending | ImageReady;
 
+class PictogramCenteringCorrector {
+  canvas: HTMLCanvasElement;
+  context: CanvasRenderingContext2D;
+
+  constructor() {
+    this.canvas = document.createElement("canvas");
+    this.context = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+  }
+
+  getCorrectionOffset(image: HTMLImageElement, size: number): Coordinates {
+    this.context.drawImage(image, 0, 0, size, size);
+    const data = this.context.getImageData(0, 0, size, size).data;
+
+    const alpha = new Uint8ClampedArray(data.length / 4);
+
+    for (let i = 0; i < data.length; i += 4) {
+      alpha[i / 4] = data[i + 3];
+    }
+
+    let sumX = 0;
+    let sumY = 0;
+    let total = 0;
+
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const a = alpha[y * size + x];
+
+        total += a;
+        sumX += a * x;
+        sumY += a * y;
+      }
+    }
+
+    const barycenterX = sumX / total;
+    const barycenterY = sumY / total;
+
+    return {
+      x: barycenterX - size / 2,
+      y: barycenterY - size / 2,
+    };
+  }
+}
+
 /**
  * To share the texture between the program instances of the graph and the
  * hovered nodes (to prevent some flickering, mostly), this program must be
  * "built" for each sigma instance:
  */
-export default function createNodePictogramProgram(): NodeProgramConstructor {
+export default function createNodePictogramProgram(
+  options?: CreateNodePictogramProgramOptions,
+): NodeProgramConstructor {
+  options = options || {};
+
+  const corrector = new PictogramCenteringCorrector();
+
   /**
    * These attributes are shared between all instances of this exact class,
    * returned by this call to getNodeProgramImage:
@@ -198,64 +251,15 @@ export default function createNodePictogramProgram(): NodeProgramConstructor {
           dy = (image.height - image.width) / 2;
         }
 
-        const testerCanvas = document.createElement("canvas");
-        const testerContext = testerCanvas.getContext("2d") as CanvasRenderingContext2D;
+        let dxOffset = 0;
+        let dyOffset = 0;
 
-        testerContext.drawImage(image, 0, 0, size, size);
+        if (options?.correctCentering) {
+          const correction = corrector.getCorrectionOffset(image, size);
 
-        const data = testerContext.getImageData(0, 0, size, size).data;
-        const alpha = new Uint8ClampedArray(data.length / 4);
-
-        for (let i = 0; i < data.length; i += 4) {
-          alpha[i / 4] = data[i + 3];
+          dxOffset = correction.x;
+          dyOffset = correction.y;
         }
-
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-
-        let sumX = 0;
-        let sumY = 0;
-        let total = 0;
-
-        for (let y = 0; y < size; y++) {
-          for (let x = 0; x < size; x++) {
-            const a = alpha[y * size + x];
-
-            if (a > 0) {
-              if (x < minX) minX = x;
-              if (x > maxX) maxX = x;
-              if (y < minY) minY = y;
-              if (y > maxY) maxY = y;
-            }
-
-            total += a;
-            sumX += a * x;
-            sumY += a * y;
-          }
-        }
-
-        const barycenterX = sumX / total;
-        const barycenterY = sumY / total;
-
-        const centerX = minX + Math.ceil((maxX - minX) / 2);
-        const centerY = minY + Math.ceil((maxY - minY) / 2);
-
-        console.log("barycenters", barycenterX, barycenterY, size / 2);
-        console.log("centers", centerX, centerY, size / 2);
-
-        let dxOffset = barycenterX - size / 2;
-        let dyOffset = barycenterY - size / 2;
-
-        // if (minX > size - maxX) {
-        //   dxOffset = minX - (size - maxX) + 1;
-        // }
-        // if (minY > size - maxY) {
-        //   dyOffset = minY - (size - maxY) + 1;
-        // }
-
-        console.log("offsets", dxOffset, dyOffset);
 
         // NOTE: it's possible to offset the image here, this is potentially useful for some pictograms
         ctx.drawImage(

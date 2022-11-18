@@ -112,7 +112,7 @@ declare global {
   }
 }
 
-const NodePictogramProgram = createNodePictogramProgram();
+const NodePictogramProgram = createNodePictogramProgram({ correctCentering: true });
 
 window.renderer = new Sigma(shownGraph, container, {
   nodeProgramClasses: {
