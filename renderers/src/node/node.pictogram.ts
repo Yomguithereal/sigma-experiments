@@ -103,14 +103,16 @@ class PictogramCenteringCorrector {
   }
 
   getCorrectionOffset(image: HTMLImageElement, size: number): Coordinates {
+    this.canvas.width = size;
+    this.canvas.height = size;
     this.context.clearRect(0, 0, size, size);
     this.context.drawImage(image, 0, 0, size, size);
     const data = this.context.getImageData(0, 0, size, size).data;
 
     const alpha = new Uint8ClampedArray(data.length / 4);
 
-    for (let i = 0; i < data.length; i += 4) {
-      alpha[i / 4] = data[i + 3];
+    for (let i = 0; i < data.length; i++) {
+      alpha[i] = data[i * 4 + 3];
     }
 
     let sumX = 0;
@@ -322,7 +324,6 @@ export default function createNodePictogramProgram(
 
         if (options?.correctCentering) {
           const correction = corrector.getCorrectionOffset(image, size);
-          console.log(image, size, correction);
           dxOffset = correction.x;
           dyOffset = correction.y;
         }
