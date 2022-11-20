@@ -67,7 +67,7 @@ const float radius = 0.5;
 
 void main(void) {
   vec4 texel = texture2D(u_atlas, v_texture.xy + gl_PointCoord * v_texture.zw, -1.0);
-  vec4 color = mix(gl_FragColor, v_color, texel.a);;
+  vec4 color = mix(gl_FragColor, v_color, texel.a);
 
   vec2 m = gl_PointCoord - vec2(0.5, 0.5);
   float dist = length(m);
