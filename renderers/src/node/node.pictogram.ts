@@ -12,7 +12,17 @@ interface CreateNodePictogramProgramOptions {
   correctCentering?: boolean;
   // NOTE: only work with svg accessible through CORS and having proper dimensions
   forcedSvgSize?: number;
+  // NOTE: if true, the edges of some pictogram might be cropped to fit the circle
+  // This might be desirable when showing pictogram inside a node, but not if
+  // you need to rely on pictograms to display node as shapes
+  keepWithinCircle?: boolean;
 }
+
+const DEFAULT_CREATE_NODE_PICTOGRAM_OPTIONS: CreateNodePictogramProgramOptions = {
+  correctCentering: false,
+  forcedSvgSize: undefined,
+  keepWithinCircle: true,
+};
 
 const VERTEX_SHADER_SOURCE = /*glsl*/ `
 attribute vec2 a_position;
@@ -62,6 +72,7 @@ varying float v_border;
 varying vec4 v_texture;
 
 uniform sampler2D u_atlas;
+uniform float u_keepWithinCircle;
 
 const float radius = 0.5;
 
@@ -70,7 +81,7 @@ void main(void) {
   vec4 color = mix(gl_FragColor, v_color, texel.a);
 
   vec2 m = gl_PointCoord - vec2(0.5, 0.5);
-  float dist = length(m);
+  float dist = length(m) * u_keepWithinCircle;
 
   if (dist < radius - v_border) {
     gl_FragColor = color;
@@ -147,7 +158,9 @@ class PictogramCenteringCorrector {
 export default function createNodePictogramProgram(
   options?: CreateNodePictogramProgramOptions,
 ): NodeProgramConstructor {
-  options = options || {};
+  options = Object.assign({}, DEFAULT_CREATE_NODE_PICTOGRAM_OPTIONS, options);
+
+  const keepWithinCircle = options.keepWithinCircle !== false;
 
   const corrector = new PictogramCenteringCorrector();
 
@@ -398,7 +411,7 @@ export default function createNodePictogramProgram(
 
   const { UNSIGNED_BYTE, FLOAT } = WebGLRenderingContext;
 
-  const UNIFORMS = ["u_sizeRatio", "u_pixelRatio", "u_matrix", "u_atlas"] as const;
+  const UNIFORMS = ["u_sizeRatio", "u_pixelRatio", "u_matrix", "u_atlas", "u_keepWithinCircle"] as const;
 
   return class NodePictogramProgram extends NodeProgram<typeof UNIFORMS[number]> {
     getDefinition() {
@@ -477,8 +490,9 @@ export default function createNodePictogramProgram(
 
       const gl = this.gl;
 
-      const { u_sizeRatio, u_pixelRatio, u_matrix, u_atlas } = this.uniformLocations;
+      const { u_sizeRatio, u_pixelRatio, u_matrix, u_atlas, u_keepWithinCircle } = this.uniformLocations;
 
+      gl.uniform1f(u_keepWithinCircle, keepWithinCircle ? 1 : 0);
       gl.uniform1f(u_sizeRatio, params.sizeRatio);
       gl.uniform1f(u_pixelRatio, params.pixelRatio);
       gl.uniformMatrix3fv(u_matrix, false, params.matrix);

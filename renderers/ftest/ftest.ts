@@ -33,7 +33,7 @@ clusteredGraph.updateEachNodeAttributes((node, attr) => {
 randomLayout.assign(clusteredGraph);
 forceAtlas2.assign(clusteredGraph, { iterations: 100, settings: forceAtlas2.inferSettings(clusteredGraph) });
 
-let ICON = "grade";
+let ICON = "settings";
 ICON = `https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/${ICON}/wght100grad200/48px.svg`;
 
 const dummyGraph = new MultiDirectedGraph();
@@ -92,7 +92,7 @@ dummyGraph.mergeEdge(3, 0, { color: "blue" });
 dummyGraph.mergeEdge(0, 2, { color: "blue" });
 dummyGraph.mergeEdge(1, 3, { color: "blue" });
 
-const shownGraph = clusteredGraph;
+const shownGraph = dummyGraph;
 
 shownGraph.updateEachNodeAttributes((node, attr) => {
   const size = attr.size || Math.random() * 15;
@@ -101,7 +101,7 @@ shownGraph.updateEachNodeAttributes((node, attr) => {
     ...attr,
     size,
     haloSize: size * 7,
-    color: attr.color || "red",
+    color: attr.color || "blue",
     haloColor: Math.random() > 0.5 ? "blue" : "green",
     insideColor: "yellow",
     dotColor: "black",
@@ -123,7 +123,11 @@ declare global {
   }
 }
 
-const NodePictogramProgram = createNodePictogramProgram({ correctCentering: true, forcedSvgSize: 384 });
+const NodePictogramProgram = createNodePictogramProgram({
+  correctCentering: true,
+  forcedSvgSize: 384,
+  keepWithinCircle: false,
+});
 
 window.renderer = new Sigma(shownGraph, container, {
   nodeProgramClasses: {
