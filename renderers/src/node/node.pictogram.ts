@@ -441,11 +441,16 @@ export default function createNodePictogramProgram(
         if (renderer && renderer.scheduleRefresh) renderer.scheduleRefresh();
       });
 
-      textureImage = new ImageData(1, 1);
-
       this.texture = gl.createTexture() as WebGLTexture;
-      gl.bindTexture(gl.TEXTURE_2D, this.texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+
+      if (!textureImage) {
+        textureImage = new ImageData(1, 1);
+
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+      } else {
+        this.rebindTexture();
+      }
     }
 
     rebindTexture() {

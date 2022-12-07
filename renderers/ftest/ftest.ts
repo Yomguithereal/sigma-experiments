@@ -152,3 +152,9 @@ window.renderer = new Sigma(shownGraph, container, {
 // };
 
 // rotate();
+
+// setTimeout(() => {
+//   window.renderer.kill();
+//   const newRenderer = new Sigma(window.renderer.getGraph(), container, window.renderer.getSettings());
+//   window.renderer = newRenderer;
+// }, 2000);
