@@ -218,7 +218,10 @@ export default function createNodePictogramProgram(
 
           root.setAttribute("width", "" + forcedSvgSize);
           root.setAttribute("height", "" + forcedSvgSize);
-          root.setAttribute("viewBox", `0 0 ${originalWidth} ${originalHeight}`);
+
+          // NOTE: since Google Material last changes to their icon viewBox, this
+          // code is no longer necessary (hopefully it does not break something else...)
+          // root.setAttribute("viewBox", `0 0 ${originalWidth} ${originalHeight}`);
 
           const correctedSvgString = new XMLSerializer().serializeToString(svg);
 
